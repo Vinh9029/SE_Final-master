@@ -28,6 +28,18 @@ $status_map = [
 ];
 ?>
 
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài viết của tôi - Old Favour Coffee</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-50">
+
 <main class="container mx-auto px-4 py-12">
     <div class="flex justify-between items-center mb-8">
         <h1 class="text-4xl font-bold text-yellow-800">Bài viết của tôi</h1>
@@ -89,5 +101,8 @@ $status_map = [
         </table>
     </div>
 </main>
+
+</body>
+</html>
 
 <?php include_once __DIR__ . '/../../includes/footer.php'; ?>

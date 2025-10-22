@@ -64,7 +64,6 @@ $sizeResult = $sizeQuery->get_result();
         </nav>
         <div class="bg-white rounded-2xl shadow-xl p-8 flex flex-col md:flex-row gap-8 items-center">
             <div class="flex-shrink-0">
-                <img src="<?php echo $product['image'] ?: '../Photos/placeholder.png'; ?>" alt="<?php echo $product['name']; ?>" class="w-64 h-64 object-cover rounded-xl shadow bg-gray-100 border-2 border-pink-100" />
                 <img src="<?php echo $base_url . '/' . ($product['image'] ?: 'Photos/placeholder.png'); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="w-64 h-64 object-cover rounded-xl shadow bg-gray-100 border-2 border-pink-100" />
             </div>
             <div class="flex-1 flex flex-col justify-center">

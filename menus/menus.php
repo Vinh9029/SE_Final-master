@@ -137,7 +137,7 @@ $pagedItems = array_slice($allItems, $offset, $itemsPerPage);
             <?php foreach ($pagedItems as $item): ?>
                 <div class="bg-white rounded-2xl shadow-xl p-6 flex flex-col items-center hover:scale-105 hover:shadow-pink-300 transition duration-200">
                     <a href="product.php?slug=<?php echo generateSlug($item['name']); ?>">
-                        <img src="<?php echo $item['image'] ?: '../Photos/placeholder.png'; ?>" alt="<?php echo $item['name']; ?>" class="w-32 h-32 object-cover rounded-xl mb-4 shadow bg-gray-100 border-2 border-pink-100" />
+                        <img src="<?php echo $base_url . '/' . ($item['image'] ?: 'Photos/placeholder.png'); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="w-32 h-32 object-cover rounded-xl mb-4 shadow bg-gray-100 border-2 border-pink-100" />
                     </a>
                     <div class="font-extrabold text-pink-600 text-xl text-center mb-1"><?php echo $item['name']; ?></div>
                     <div class="text-orange-600 font-bold text-lg mb-2 text-center"><?php echo number_format($item['price'], 0, ',', '.'); ?> đ</div>

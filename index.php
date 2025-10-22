@@ -232,7 +232,7 @@ ini_set('display_errors', 1);
         <section class="max-w-6xl mx-auto mt-16 bg-white rounded-2xl p-8 shadow-lg section-card fade-in">
             <div class="text-center mb-8">
                 <h2 class="text-4xl font-bold text-cyan-800 mb-4">💬 Câu chuyện nhỏ</h2>
-                <img src="<?php echo $base_url; ?>/Photos/menus/caphe/zalo.png" alt="Khách hàng vui vẻ" class="w-full max-w-md h-64 object-cover rounded-xl shadow-md mx-auto mb-6 transition-transform duration-300 hover:scale-105">
+                <img src="<?php echo $base_url; ?>/Photos/stories.jpg" alt="Khách hàng vui vẻ" class="w-full max-w-md h-64 object-cover rounded-xl shadow-md mx-auto mb-6 transition-transform duration-300 hover:scale-105">
             </div>
             <div class="space-y-8">
                 <div class="bg-white rounded-xl p-6 shadow-md">
