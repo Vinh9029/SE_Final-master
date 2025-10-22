@@ -323,15 +323,7 @@ ini_set('display_errors', 1);
             document.getElementById('signupPopup').classList.add('show');
         }, 5000);
 
-        // Parallax effect
-        window.addEventListener('scroll', () => {
-            const scrolled = window.pageYOffset;
-            const parallaxElements = document.querySelectorAll('.parallax');
-            parallaxElements.forEach(el => {
-                const rate = scrolled * -0.5;
-                el.style.transform = `translateY(${rate}px)`;
-            });
-        });
+
     </script>
 </body>
 </html>

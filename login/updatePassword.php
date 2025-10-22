@@ -1,9 +1,14 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 session_start();
 include_once __DIR__ . '/../database/db_connection.php';
 include_once __DIR__ . '/../config.php';
+
+// Helper function to send JSON response and exit
+function send_json_response($data) {
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit;
+}
 
 $update_error = '';
 $update_success = '';
@@ -31,21 +36,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             unset($_SESSION['otp_verified']);
             unset($_SESSION['reset_email']);
             unset($_SESSION['reset_otp']);
-            echo '<div id="successModal" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;z-index:9999;">
-                    <div style="background:#fff;border-radius:16px;padding:32px 24px;box-shadow:0 8px 32px 0 rgba(31,38,135,0.18);display:flex;flex-direction:column;align-items:center;">
-                        <i class="fa-solid fa-circle-check" style="font-size:3rem;color:#4ade80;margin-bottom:12px;"></i>
-                        <div style="font-size:1.2rem;font-weight:600;color:#16a34a;margin-bottom:8px;">Đổi mật khẩu thành công!</div>
-                        <div style="color:#555;margin-bottom:18px;">Đang chuyển hướng về trang đăng nhập...</div>
-                        <div class="loader" style="width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #fc466b;border-radius:50%;animation:spin 1s linear infinite;"></div>
-                    </div>
-                </div>
-                <style>@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}</style>';
-            echo '<script>setTimeout(function(){window.location.href="index.php";}, 1800);</script>';
-            exit;
+            send_json_response(['status' => 'success', 'message' => 'Đổi mật khẩu thành công!', 'redirect' => 'index.php']);
         } else {
             $update_error = "Đổi mật khẩu thất bại. Vui lòng thử lại.";
         }
         $stmt->close();
+    }
+    if ($update_error) {
+        send_json_response(['status' => 'error', 'message' => $update_error]);
     }
 }
 ?>
@@ -113,9 +111,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             z-index: 2;
         }
 
+        .toggle-password {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            z-index: 2;
+            color: #fc466b;
+            font-size: 1.3rem;
+            background: transparent;
+            border: none;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            padding-left: 30px;
+        }
+
         .input-group input {
             width: 100%;
-            padding: 12px 12px 12px 44px;
+            padding: 12px 44px 12px 44px;
             border-radius: 10px;
             border: none;
             background: rgba(255, 255, 255, 0.25);
@@ -129,7 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #888;
         }
 
-        .update-btn {
+        .reset-btn {
             width: 100%;
             background: #fc466b;
             color: #fff;
@@ -143,7 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             transition: background 0.2s;
         }
 
-        .update-btn:hover {
+        .reset-btn:hover {
             background: #3f5efb;
         }
 
@@ -222,6 +237,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 transform: translateX(0);
             }
         }
+
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(4px);
+        }
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #fc466b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
     </style>
 </head>
 
@@ -229,69 +266,100 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
         <div class="update-container">
             <div class="profile-icon" style="cursor:pointer;" onclick="window.location.href='user.php'">
-                <img src="../Photos/logo.png" alt="Logo" style="width:220px; height:100px; object-fit:cover;" />
+                <img src="../Photos/logo.png" alt="Logo" style="width:210px; height:100px; object-fit:cover;" />
             </div>
             <div class="update-header">Update Password</div>
-            <form method="post" autocomplete="off">
+            <form id="updateForm" method="post" autocomplete="off">
                 <div class="input-group">
                     <i class="fa-solid fa-lock"></i>
-                    <input type="password" name="new_password" placeholder="Mật khẩu mới" required id="new_password">
+                    <input type="password" name="new_password" placeholder="Mật khẩu mới" required id="new_password" oninput="checkStrength()">
+                    <span class="toggle-password" onclick="togglePasswordVisibility('new_password', 'eyeIcon1')">
+                        <i class="fa-regular fa-eye" id="eyeIcon1"></i>
+                    </span>
                 </div>
                 <div class="input-group">
                     <i class="fa-solid fa-lock"></i>
                     <input type="password" name="confirm_password" placeholder="Xác nhận mật khẩu mới" required id="confirm_password">
+                    <span class="toggle-password" onclick="togglePasswordVisibility('confirm_password', 'eyeIcon2')">
+                        <i class="fa-regular fa-eye" id="eyeIcon2"></i>
+                    </span>
                 </div>
-                <?php if ($update_error): ?>
-                    <div class="error-message show"><i class="fa-solid fa-triangle-exclamation"></i> <?php echo htmlspecialchars($update_error); ?></div>
-                <?php endif; ?>
+                <div id="errorMessage" class="error-message"></div>
                 <button type="submit" class="reset-btn">Đổi mật khẩu</button>
             </form>
             <div class="back-link">
-                <span>Back to</span>
-                <a href="user.php">Login</a>
+                <span>Quay lại trang</span>
+                <a href="index.php">Đăng nhập</a>
             </div>
         </div>
     </div>
+
+    <div id="loadingOverlay">
+        <div class="loader"></div>
+    </div>
+
+    <div id="successModal" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);display:none;align-items:center;justify-content:center;z-index:9999;">
+        <div style="background:#fff;border-radius:16px;padding:32px 24px;box-shadow:0 8px 32px 0 rgba(31,38,135,0.18);display:flex;flex-direction:column;align-items:center;">
+            <i class="fa-solid fa-circle-check" style="font-size:3rem;color:#4ade80;margin-bottom:12px;"></i>
+            <div style="font-size:1.2rem;font-weight:600;color:#16a34a;margin-bottom:8px;">Đổi mật khẩu thành công!</div>
+            <div style="color:#555;margin-bottom:18px;">Đang chuyển hướng về trang đăng nhập...</div>
+            <div class="loader" style="width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #fc466b;border-radius:50%;animation:spin 1s linear infinite;"></div>
+        </div>
+    </div>
+    <style>@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}</style>
+
     <script>
-        function checkStrength() {
-            var pwd = document.getElementById('newPassword').value;
-            var bar = document.getElementById('progressBar');
-            var label = document.getElementById('progressLabel');
-            var text = document.getElementById('strengthText');
-            // Criteria
-            var hasLength = pwd.length >= 8;
-            var hasNumber = /[0-9]/.test(pwd);
-            var hasLower = /[a-z]/.test(pwd);
-            var hasUpper = /[A-Z]/.test(pwd);
-            var hasSpecial = /[^A-Za-z0-9]/.test(pwd);
-            var met = [hasLength, hasNumber, hasLower, hasUpper, hasSpecial].filter(Boolean).length;
-            // Progress bar
-            var percent = met * 20;
-            var colors = [
-                "bg-red-500",
-                "bg-orange-400",
-                "bg-yellow-400",
-                "bg-blue-400",
-                "bg-green-500"
-            ];
-            var labels = [
-                "Very Weak",
-                "Weak",
-                "Fair",
-                "Strong",
-                "Very Strong"
-            ];
-            bar.style.width = percent + "%";
-            bar.className = "h-2 rounded-full transition-all duration-300 " + colors[met === 0 ? 0 : met - 1];
-            label.innerText = labels[met === 0 ? 0 : met - 1];
-            if (!pwd) {
-                label.innerText = '';
-                bar.style.width = '0%';
-                text.innerHTML = '<span class="text-gray-400">Start typing to check password strength...</span>';
+        document.getElementById('updateForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const form = this;
+            const errorMessage = document.getElementById('errorMessage');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const formData = new FormData(form);
+
+            errorMessage.classList.remove('show');
+            errorMessage.innerHTML = '';
+            loadingOverlay.style.display = 'flex';
+
+            fetch('', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadingOverlay.style.display = 'none';
+                if (data.status === 'success') {
+                    document.getElementById('successModal').style.display = 'flex';
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 1800);
+                } else {
+                    errorMessage.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${data.message}`;
+                    errorMessage.classList.add('show');
+                }
+            })
+            .catch(error => {
+                loadingOverlay.style.display = 'none';
+                errorMessage.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> An unexpected error occurred. Please try again.';
+                errorMessage.classList.add('show');
+                console.error('Error:', error);
+            });
+        });
+
+        function togglePasswordVisibility(inputId, iconId) {
+            const passwordInput = document.getElementById(inputId);
+            const eyeIcon = document.getElementById(iconId);
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.className = 'fa-regular fa-eye-slash';
             } else {
-                text.innerText = '';
+                passwordInput.type = 'password';
+                eyeIcon.className = 'fa-regular fa-eye';
             }
         }
+
+        // The checkStrength function is not used in the provided HTML, but keeping it in case you add the progress bar
+        function checkStrength() {}
     </script>
 </body>
 </html>

@@ -1,6 +1,4 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 session_start();
 include_once __DIR__ . '/../database/db_connection.php';
 include_once __DIR__ . '/../config.php';
@@ -8,7 +6,17 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-function sendOtpMail($to, $otp) {
+// Helper function to send JSON response and exit
+function send_json_response($data) {
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit;
+}
+
+function sendOtpMail($to, $otp, $base_url) {
+    // Dependencies are moved inside to prevent premature output
+    require_once __DIR__ . '/../vendor/autoload.php';
+    
     $mail = new PHPMailer(true);
     try {
         // $mail->SMTPDebug = 2; // Bật để gỡ lỗi nếu cần, sau đó hãy tắt đi
@@ -57,31 +65,28 @@ function sendOtpMail($to, $otp) {
 
 $reset_error = '';
 $reset_success = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['email'])) {
     $email = trim($_POST['email']);
     $stmt = $conn->prepare("SELECT user_id FROM users WHERE email=?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $stmt->store_result();
+
     if ($stmt->num_rows === 1) {
         $otp = rand(100000, 999999);
         $_SESSION['reset_email'] = $email;
         $_SESSION['reset_otp'] = $otp;
-        if (sendOtpMail($email, $otp)) {
-            $reset_success = "<div style='display:flex;flex-direction:column;align-items:center;gap:10px;'>"
-                . "<i class='fa-solid fa-circle-check' style='font-size:2.2rem;color:#4ade80;'></i>"
-                . "<span style='font-weight:600;color:#16a34a;'>Mã OTP đã được gửi đến email của bạn!</span>"
-                . "<span style='color:#555;'>Vui lòng kiểm tra hộp thư và nhập mã OTP tại <a href='verifyOtp.php' style='color:#fc466b;text-decoration:underline;'>trang xác thực OTP</a>.</span>"
-                . "</div>";
+        $_SESSION['otp_timestamp'] = time(); // Set timestamp for expiration
+
+        if (sendOtpMail($email, $otp, $base_url)) {
+            $message = "Mã OTP đã được gửi đến email của bạn! Vui lòng kiểm tra hộp thư và nhập mã tại <a href='verifyOtp.php' style='color:#fc466b;text-decoration:underline;'>trang xác thực</a>.";
+            send_json_response(['status' => 'success', 'message' => $message]);
         } else {
-            $reset_error = "<div style='display:flex;flex-direction:column;align-items:center;gap:10px;'>"
-                . "<i class='fa-solid fa-triangle-exclamation' style='font-size:2.2rem;color:#fc466b;'></i>"
-                . "<span style='font-weight:600;color:#fc466b;'>Gửi email thất bại!</span>"
-                . "<span style='color:#555;'>Vui lòng thử lại hoặc kiểm tra kết nối.</span>"
-                . "</div>";
+            $error_message = "Gửi email thất bại! Vui lòng thử lại hoặc kiểm tra lại địa chỉ email.";
+            send_json_response(['status' => 'error', 'message' => $error_message]);
         }
     } else {
-        $reset_error = "Email không tồn tại trong hệ thống.";
+        send_json_response(['status' => 'error', 'message' => 'Email không tồn tại trong hệ thống.']);
     }
     $stmt->close();
 }
@@ -201,36 +206,120 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email'])) {
         .back-link a:hover {
             color: #3f5efb;
         }
+
+        .message-box {
+            width: 100%;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            text-align: center;
+            display: none; /* Hidden by default */
+            animation: fadeIn 0.5s;
+        }
+        .message-box.success {
+            background-color: #e6f9f0;
+            color: #16a34a;
+            border: 1px solid #a1e9c5;
+        }
+        .message-box.error {
+            background-color: #fde8e8;
+            color: #e53e3e;
+            border: 1px solid #f9b3b3;
+        }
+        .message-box i {
+            margin-right: 8px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(4px);
+        }
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #fc466b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 
 <body>
-    <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
-        <div class="reset-container">
-            <div class="profile-icon" style="cursor:pointer;" onclick="window.location.href='<?php echo $base_url; ?>/login/index.php'">
-                <img src="../Photos/logo.png" alt="Logo" style="width:210px; height:100px; object-fit:cover;" />
+    <div id="loadingOverlay">
+        <div class="loader"></div>
+    </div>
+
+    <div class="reset-container">
+        <div class="profile-icon" style="cursor:pointer;" onclick="window.location.href='<?php echo $base_url; ?>/login/index.php'">
+            <img src="../Photos/logo.png" alt="Logo" style="width:210px; height:100px; object-fit:cover;" />
+        </div>
+        <div class="reset-header">Reset Password</div>
+        <form id="resetForm" method="post" autocomplete="off">
+            <div class="input-group">
+                <i class="fa-solid fa-envelope"></i>
+                <input type="email" name="email" placeholder="Email" required>
             </div>
-            <div class="reset-header">Reset Password</div>
-            <form method="post" autocomplete="off">
-                <div class="input-group">
-                    <i class="fa-solid fa-envelope"></i>
-                    <input type="email" name="email" placeholder="Email" required>
-                </div>
-                <button type="submit" class="reset-btn">Gửi mã OTP</button>
-                <?php if ($reset_error): ?>
-                    <div class="error-message show"><i class="fa-solid fa-triangle-exclamation"></i> <?php echo htmlspecialchars($reset_error); ?></div>
-                <?php endif; ?>
-                <?php if ($reset_success): ?>
-                    <div class="success-message show"><i class="fa-solid fa-circle-check"></i> <?php echo $reset_success; ?></div>
-                    <div style="margin-top:12px;text-align:center;color:#555;font-size:0.98rem;">Đã gửi mã OTP, vui lòng kiểm tra email và nhập mã tại <a href='verifyOtp.php' style='color:#fc466b;text-decoration:underline;'>trang xác thực OTP</a>.</div>
-                <?php endif; ?>
-            </form>
-            <div class="back-link">
-                <span>Remembered your password?</span>
-                <a href="<?php echo $base_url; ?>/login/index.php">Login</a>
-            </div>
+            <button type="submit" class="reset-btn">Gửi mã OTP</button>
+            <div id="messageBox" class="message-box"></div>
+        </form>
+        <div class="back-link">
+            <span>Remembered your password?</span>
+            <a href="<?php echo $base_url; ?>/login/index.php">Login</a>
         </div>
     </div>
+
+    <script>
+        document.getElementById('resetForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const form = this;
+            const messageBox = document.getElementById('messageBox');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const formData = new FormData(form);
+
+            // Hide previous messages and show loader
+            messageBox.style.display = 'none';
+            loadingOverlay.style.display = 'flex';
+
+            fetch('', { // Post to the same page
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadingOverlay.style.display = 'none';
+                messageBox.className = `message-box ${data.status}`;
+                messageBox.innerHTML = `<i class="fa-solid ${data.status === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i> ${data.message}`;
+                messageBox.style.display = 'block';
+            })
+            .catch(error => {
+                loadingOverlay.style.display = 'none';
+                messageBox.className = 'message-box error';
+                messageBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> An unexpected error occurred. Please try again.';
+                messageBox.style.display = 'block';
+                console.error('Error:', error);
+            });
+        });
+    </script>
 </body>
 
 </html>
