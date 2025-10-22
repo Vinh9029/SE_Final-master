@@ -201,24 +201,63 @@ ini_set('display_errors', 1);
         </div>
     </section>
 
-    <!-- Promotion Section -->
-    <section id="promotion" class="py-20 bg-C4A35A text-222222 parallax" style="background-image: url('../Photos/test1.jpg'); background-attachment: fixed;">
-        <div class="max-w-6xl mx-auto px-4">
-            <div class="text-center mb-12">
-                <h2 class="text-4xl font-bold mb-4">Ưu Đãi Đặc Biệt</h2>
-                <p class="text-lg">Đừng bỏ lỡ những combo hấp dẫn</p>
+    <!-- Promotion Section - Redesigned -->
+    <section id="promotion" class="py-20 section-bg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-4B2E05 mb-4">Ưu Đãi Tháng Này</h2>
+                <p class="text-lg text-222222 max-w-3xl mx-auto">Những ưu đãi độc quyền chỉ có tại The Old Flavour, đừng bỏ lỡ cơ hội thưởng thức hương vị tuyệt hảo với giá tốt nhất.</p>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="bg-white rounded-xl shadow-lg p-6">
-                    <h3 class="text-xl font-bold mb-4">Combo Sáng Năng Lượng</h3>
-                    <p class="mb-4">Cà phê + Bánh mặn - Giảm 20%</p>
-                    <a href="#" class="cta-button text-white px-6 py-3 rounded-full font-semibold inline-block">Đặt Ngay</a>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                
+                <!-- Promotion Card 1 -->
+                <div class="bg-white rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 ease-in-out group">
+                    <div class="relative">
+                        <img class="w-full h-56 object-cover" src="../Photos/menus/ankem/cheesecake-viet-quat.jpg" alt="Combo Cà phê và Bánh">
+                        <div class="absolute top-0 right-0 bg-red-600 text-white text-sm font-bold px-3 py-1 m-4 rounded-md">-25%</div>
+                    </div>
+                    <div class="p-6 flex flex-col">
+                        <h3 class="text-2xl font-bold text-4B2E05 mb-2">Combo Chiều Thu</h3>
+                        <p class="text-gray-600 mb-4 flex-grow">Thưởng thức một ly Cà Phê Muối đậm đà cùng một miếng Bánh Cheesecake Việt Quất mềm mịn.</p>
+                        <div class="border-t border-gray-200 pt-4 mt-auto">
+                            <p class="text-sm text-gray-500 mb-3">Áp dụng cho đến hết tháng 10.</p>
+                            <a href="../index.php#menu" class="cta-button text-white font-semibold px-6 py-3 rounded-full inline-block w-full text-center group-hover:shadow-lg">Khám Phá Ngay</a>
+                        </div>
+                    </div>
                 </div>
-                <div class="bg-white rounded-xl shadow-lg p-6">
-                    <h3 class="text-xl font-bold mb-4">Combo Trà & Bánh</h3>
-                    <p class="mb-4">Trà đào + Bánh ngọt - Miễn phí giao hàng</p>
-                    <a href="#" class="cta-button text-white px-6 py-3 rounded-full font-semibold inline-block">Đặt Ngay</a>
+
+                <!-- Promotion Card 2 -->
+                <div class="bg-white rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 ease-in-out group">
+                    <div class="relative">
+                        <img class="w-full h-56 object-cover" src="../Photos/menus/nuocdacbiet/soda-viet-quat-bac-ha.jpg" alt="Giờ Vàng">
+                        <div class="absolute top-0 right-0 bg-yellow-500 text-gray-800 text-sm font-bold px-3 py-1 m-4 rounded-md">GIỜ VÀNG</div>
+                    </div>
+                    <div class="p-6 flex flex-col">
+                        <h3 class="text-2xl font-bold text-4B2E05 mb-2">Mua 1 Tặng 1</h3>
+                        <p class="text-gray-600 mb-4 flex-grow">Áp dụng cho các dòng Trà và Soda đặc biệt trong khung giờ vàng từ 14:00 đến 16:00 mỗi ngày.</p>
+                        <div class="border-t border-gray-200 pt-4 mt-auto">
+                            <p class="text-sm text-gray-500 mb-3">Áp dụng mỗi ngày trong tuần.</p>
+                            <a href="../index.php#menu" class="cta-button text-white font-semibold px-6 py-3 rounded-full inline-block w-full text-center group-hover:shadow-lg">Xem Menu Nước</a>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Promotion Card 3 -->
+                <div class="bg-white rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 ease-in-out group">
+                    <div class="relative">
+                        <img class="w-full h-56 object-cover" src="../Photos/baemin.png" alt="Miễn Phí Vận Chuyển">
+                        <div class="absolute top-0 right-0 bg-green-500 text-white text-sm font-bold px-3 py-1 m-4 rounded-md">FREESHIP</div>
+                    </div>
+                    <div class="p-6 flex flex-col">
+                        <h3 class="text-2xl font-bold text-4B2E05 mb-2">Miễn Phí Giao Hàng</h3>
+                        <p class="text-gray-600 mb-4 flex-grow">Miễn phí vận chuyển cho mọi đơn hàng từ 100.000đ trong bán kính 3km khi đặt qua website.</p>
+                        <div class="border-t border-gray-200 pt-4 mt-auto">
+                            <p class="text-sm text-gray-500 mb-3">Nhập mã: <span class="font-bold text-gray-700">OLDFLAVOUR</span></p>
+                            <a href="../index.php" class="cta-button text-white font-semibold px-6 py-3 rounded-full inline-block w-full text-center group-hover:shadow-lg">Đặt Hàng Ngay</a>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </section>
@@ -251,6 +290,7 @@ ini_set('display_errors', 1);
     </footer>
 
     <?php include '../includes/popup_signup.php'; ?>
+    <?php include '../includes/scrollButton.php'; ?>
     <script>
         // Loading screen
         window.addEventListener('load', () => {

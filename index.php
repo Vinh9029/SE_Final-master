@@ -377,6 +377,7 @@ ini_set('display_errors', 1);
         <?php include 'includes/chat-zalo.php'; ?>
     </main>
     <?php include 'includes/popup_signup.php'; ?>
+    <?php include 'includes/scrollButton.php'; ?>
     <!-- Scroll to Top Button -->
     <button id="scrollTopBtn" class="fixed bottom-5 right-5 bg-white text-brown-500 border border-brown-500 p-4 rounded-full shadow-lg opacity-0 transition-opacity duration-300 hover:bg-brown-500 hover:text-white">
         <i class="fas fa-arrow-up"></i>
