@@ -321,7 +321,7 @@ while ($item = $res->fetch_assoc()) {
                                 <span>Tổng cộng:</span>
                                 <span class="text-orange-600" id="order-total"><?php echo number_format($total); ?>đ</span>
                             </div>
-                            <?php if ($voucher_code): ?>
+                            <?php if ($voucher_code && $total >= $voucher_min_order): ?>
                             <div class="flex justify-between items-center text-base mt-2">
                                 <span class="text-green-600 font-semibold">Mã giảm giá đã áp dụng:</span>
                                 <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold"><?php echo htmlspecialchars($voucher_code); ?></span>
@@ -330,6 +330,12 @@ while ($item = $res->fetch_assoc()) {
                                 <span class="text-gray-700">Giảm giá:</span>
                                 <span class="text-green-600 font-bold" id="order-discount">- <?php echo number_format($discount); ?>đ</span>
                             </div>
+                            <?php elseif ($voucher_code): ?>
+                            <div class="flex justify-between items-center text-base mt-2">
+                                <span class="text-red-600 font-semibold">Mã giảm giá không hợp lệ:</span>
+                                <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full font-bold"><?php echo htmlspecialchars($voucher_code); ?></span>
+                            </div>
+                            <div class="text-xs text-red-500 text-right mt-1">Đơn hàng chưa đạt giá trị tối thiểu <?php echo number_format($voucher_min_order); ?>đ</div>
                             <?php endif; ?>
                             <div class="flex justify-between items-center text-base mt-2" id="shipping-row" style="display: none;">
                                 <span class="text-gray-700">Phí giao hàng:</span>

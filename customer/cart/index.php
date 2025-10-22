@@ -100,7 +100,14 @@ if (!isset($_SESSION['user_id'])) {
                                 </button>
                                 <?php endwhile; ?>
                             </div>
-                            <div id="voucher-success" class="hidden text-green-600 font-semibold mt-2 animate-bounce">🎉 Mã giảm giá đã được áp dụng!</div>
+                            <!-- Applied Voucher Info -->
+                            <div id="applied-voucher-info" class="hidden mt-2 p-3 bg-green-50 border border-green-200 rounded-xl flex items-center justify-between transition-all duration-300">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-check-circle text-green-500"></i>
+                                    <span class="font-bold text-green-700">Đã áp dụng: <span id="applied-voucher-code-display"></span></span>
+                                </div>
+                                <button id="clear-voucher-btn" class="text-red-500 hover:text-red-700 font-bold text-sm" title="Bỏ chọn voucher">Bỏ</button>
+                            </div>
                         </div>
                         <div class="flex flex-col gap-2 w-full md:w-1/2">
                             <div class="flex justify-between mb-2">
@@ -147,83 +154,6 @@ if (!isset($_SESSION['user_id'])) {
         <?php include_once __DIR__ . '/../../includes/footer.php'; ?>
     </main>
     <script>
-        // --- VOUCHER & ĐƠN HÀNG ---
-        const VOUCHERS = {
-            'GIAM10': {
-                type: 'percent',
-                value: 10,
-                label: 'Giảm 10%'
-            },
-            'FREESHIP': {
-                type: 'shipping',
-                value: 15000,
-                label: 'Miễn phí giao hàng'
-            }
-        };
-        let appliedVoucher = null;
-        const SHIPPING_FEE = 15000;
-
-        function updateCartTotal() {
-            const subtotals = document.querySelectorAll('.subtotal');
-            let total = 0;
-            let totalQty = 0;
-            subtotals.forEach(subtotal => {
-                const price = parseFloat(subtotal.dataset.price);
-                const quantity = parseInt(subtotal.closest('.cart-item').querySelector('.quantity-input')
-                    .value);
-                total += price * quantity;
-                totalQty += quantity;
-            });
-            // Tính giảm giá
-            let discount = 0;
-            let shipping = 0; // Không hiển thị phí giao hàng ở giỏ hàng
-            if (appliedVoucher) {
-                if (appliedVoucher.type === 'percent') {
-                    discount = Math.round(total * appliedVoucher.value / 100);
-                } else if (appliedVoucher.type === 'shipping') {
-                    shipping = 0;
-                }
-            }
-            const totalAfter = total - discount + shipping;
-            // Cập nhật UI
-            document.getElementById('cart-total').textContent = new Intl.NumberFormat('vi-VN').format(totalAfter) + 'đ';
-            document.getElementById('order-total-qty').textContent = totalQty;
-            document.getElementById('order-total-before').textContent = new Intl.NumberFormat('vi-VN').format(total) +
-                'đ';
-            document.getElementById('order-discount').textContent = '-' + new Intl.NumberFormat('vi-VN').format(
-                discount) + 'đ';
-            document.getElementById('order-shipping').textContent = shipping === 0 ? '' : new Intl.NumberFormat(
-                'vi-VN').format(shipping) + 'đ';
-            document.getElementById('shipping-row').style.display = 'none';
-            document.getElementById('order-total-after').textContent = new Intl.NumberFormat('vi-VN').format(
-                totalAfter) + 'đ';
-        }
-        updateCartTotal();
-
-        // Áp dụng voucher
-        document.getElementById('apply-voucher-btn').onclick = function () {
-            const code = document.getElementById('voucher-input').value.trim().toUpperCase();
-            if (VOUCHERS[code]) {
-                appliedVoucher = VOUCHERS[code];
-                document.getElementById('voucher-success').classList.remove('hidden');
-                setTimeout(() => document.getElementById('voucher-success').classList.add('hidden'), 2000);
-            } else {
-                appliedVoucher = null;
-                alert('Mã không hợp lệ hoặc đã hết hạn!');
-            }
-            updateCartTotal();
-        };
-        // Chọn voucher có sẵn
-        document.querySelectorAll('.voucher-btn').forEach(btn => {
-            btn.onclick = function () {
-                document.getElementById('voucher-input').value = btn.dataset.voucher;
-                document.getElementById('apply-voucher-btn').click();
-            };
-        });
-        
-    </script>
-
-    <script>
     // --- VOUCHER UI/UX & AJAX LOADING ---
     let appliedVoucherCode = null;
     let appliedVoucherDiscount = 0;
@@ -259,18 +189,66 @@ if (!isset($_SESSION['user_id'])) {
     // Voucher click
     document.querySelectorAll('.voucher-btn').forEach(btn => {
         btn.onclick = function () {
-            document.querySelectorAll('.voucher-btn').forEach(b => b.classList.remove('ring-2', 'ring-pink-400'));
-            btn.classList.add('ring-2', 'ring-pink-400');
-            appliedVoucherCode = btn.dataset.voucher;
-            appliedVoucherDiscount = parseInt(btn.querySelector('span:nth-child(3)').textContent.replace(/\D/g, '')) || 0;
-            appliedVoucherMinOrder = parseInt(btn.querySelector('span:nth-child(4)').textContent.replace(/\D/g, '')) || 0;
-            appliedVoucherType = btn.querySelector('span:nth-child(3)').textContent.includes('%') ? 'percent' : 'cash';
-            showMessage('Đã áp dụng mã giảm giá!', 'success');
-            updateCartTotal();
+            const voucherCode = btn.dataset.voucher;
+            showLoading(true);
+            fetch('apply_voucher.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ voucher_code: voucherCode })
+            })
+            .then(res => res.json())
+            .then(data => {
+                showLoading(false);
+                if (data.success) {
+                    document.querySelectorAll('.voucher-btn').forEach(b => b.classList.remove('ring-2', 'ring-pink-400'));
+                    btn.classList.add('ring-2', 'ring-pink-400');
+                    appliedVoucherCode = data.voucher.code;
+                    appliedVoucherDiscount = data.voucher.discount_percent;
+                    appliedVoucherMinOrder = data.voucher.min_order_value;
+                    appliedVoucherType = data.voucher.discount_percent > 0 ? 'percent' : 'cash'; // Giả sử chỉ có percent hoặc cash
+                    showMessage('Đã áp dụng mã giảm giá!', 'success');
+                    updateAppliedVoucherUI(data.voucher.code);
+                } else {
+                    showMessage(data.message, 'error');
+                }
+                updateCartTotal();
+            });
         };
     });
 
-    // --- AJAX LOADING & MESSAGE FOR CART ACTIONS ---
+    // Clear voucher
+    document.getElementById('clear-voucher-btn').onclick = function() {
+        showLoading(true);
+        fetch('apply_voucher.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ voucher_code: null }) // Gửi mã null để xóa
+        })
+        .then(res => res.json())
+        .then(data => {
+            showLoading(false);
+            if (data.success) {
+                document.querySelectorAll('.voucher-btn').forEach(b => b.classList.remove('ring-2', 'ring-pink-400'));
+                appliedVoucherCode = null;
+                appliedVoucherDiscount = 0;
+                appliedVoucherMinOrder = 0;
+                showMessage('Đã bỏ chọn mã giảm giá.', 'success');
+                updateAppliedVoucherUI(null);
+            }
+            updateCartTotal();
+        });
+    };
+
+    function updateAppliedVoucherUI(code) {
+        const infoBox = document.getElementById('applied-voucher-info');
+        if (code) {
+            document.getElementById('applied-voucher-code-display').textContent = code;
+            infoBox.classList.remove('hidden');
+        } else {
+            infoBox.classList.add('hidden');
+        }
+    }
+
     function refreshCartUI() {
         fetch('get_cart_items.php')
         .then(res => res.json())
@@ -385,6 +363,8 @@ if (!isset($_SESSION['user_id'])) {
         document.getElementById('shipping-row').style.display = 'none';
         document.getElementById('order-total-after').textContent = new Intl.NumberFormat('vi-VN').format(totalAfter) + 'đ';
     }
+    // Initial call to calculate total when page loads
+    document.addEventListener('DOMContentLoaded', updateCartTotal);
     </script>
 </body>
 

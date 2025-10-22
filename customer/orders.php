@@ -64,9 +64,96 @@ function get_status_label($status) {
   </div>
 </div>
 
+<!-- Order Detail Modal -->
+<div id="orderDetailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div id="orderDetailContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+        <!-- Modal Header -->
+        <div class="flex justify-between items-center p-4 border-b bg-gray-50 rounded-t-2xl">
+            <h2 class="text-xl font-bold text-gray-800">Chi tiết đơn hàng</h2>
+            <button onclick="closeModal()" class="text-gray-500 hover:text-red-600 transition text-2xl">
+                <i class="fas fa-times-circle"></i>
+            </button>
+        </div>
+        <!-- Modal Body -->
+        <div id="modalBody" class="p-6 overflow-y-auto">
+            <!-- Content will be loaded here by AJAX -->
+            <div class="text-center py-10">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-orange-500 mx-auto"></div>
+                <p class="mt-4 text-gray-600">Đang tải dữ liệu...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-// Function to view order detail (placeholder, can be expanded to modal or AJAX)
+function closeModal() {
+    document.getElementById('orderDetailModal').classList.add('hidden');
+}
+
 function viewOrderDetail(orderId) {
-    alert('Chi tiết đơn hàng #' + orderId + ' (chức năng xem chi tiết sẽ được triển khai)');
+    const modal = document.getElementById('orderDetailModal');
+    const modalBody = document.getElementById('modalBody');
+    modal.classList.remove('hidden');
+    modalBody.innerHTML = `<div class="text-center py-10">
+                                <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-orange-500 mx-auto"></div>
+                                <p class="mt-4 text-gray-600">Đang tải dữ liệu...</p>
+                           </div>`;
+
+    fetch(`get_order_detail.php?id=${orderId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const order = data.order;
+                const items = data.items;
+                
+                let itemsHtml = items.map(item => `
+                    <div class="flex items-center gap-4 py-2 border-b last:border-b-0">
+                        <img src="${data.base_url}/${item.image || 'Photos/placeholder.png'}" class="w-12 h-12 object-cover rounded-lg">
+                        <div class="flex-grow">
+                            <p class="font-semibold">${item.name}</p>
+                            <p class="text-sm text-gray-500">Số lượng: ${item.quantity}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold text-gray-800">${(item.price * item.quantity).toLocaleString('vi-VN')}đ</p>
+                            <p class="text-xs text-gray-500">${item.price.toLocaleString('vi-VN')}đ</p>
+                        </div>
+                    </div>
+                `).join('');
+
+                let discountHtml = '';
+                if (order.voucher_code) {
+                    discountHtml = `
+                        <div class="flex justify-between items-center mt-2">
+                            <span class="text-gray-600">Giảm giá (${order.voucher_code}):</span>
+                            <span class="font-bold text-green-600">-${order.discount_amount.toLocaleString('vi-VN')}đ</span>
+                        </div>`;
+                }
+
+                modalBody.innerHTML = `
+                    <div class="mb-4">
+                        <p><strong>Mã đơn hàng:</strong> #${order.order_id}</p>
+                        <p><strong>Ngày đặt:</strong> ${new Date(order.order_date).toLocaleDateString('vi-VN')}</p>
+                        <p><strong>Trạng thái:</strong> <span class="${get_status_label(order.status)[1]} px-2 py-1 rounded-full text-xs font-bold">${get_status_label(order.status)[0]}</span></p>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Các sản phẩm</h3>
+                    <div class="space-y-2 mb-4">${itemsHtml}</div>
+                    <div class="border-t pt-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Tạm tính:</span>
+                            <span class="font-semibold">${(order.total + order.discount_amount).toLocaleString('vi-VN')}đ</span>
+                        </div>
+                        ${discountHtml}
+                        <div class="flex justify-between items-center text-xl font-bold mt-2">
+                            <span>Tổng cộng:</span>
+                            <span class="text-orange-600">${order.total.toLocaleString('vi-VN')}đ</span>
+                        </div>
+                    </div>`;
+            } else {
+                modalBody.innerHTML = `<p class="text-red-500 text-center">${data.message}</p>`;
+            }
+        })
+        .catch(() => {
+            modalBody.innerHTML = '<p class="text-red-500 text-center">Có lỗi xảy ra khi tải chi tiết đơn hàng.</p>';
+        });
 }
 </script>
