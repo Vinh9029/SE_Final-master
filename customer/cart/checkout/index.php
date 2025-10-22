@@ -18,7 +18,7 @@ if ($row = $res->fetch_assoc()) {
 // Lấy giỏ hàng
 $cart_items = [];
 $total = 0;
-$sql = 'SELECT ci.*, p.name, p.price, ps.size_name, ps.extra_price FROM cart_items ci JOIN products p ON ci.product_id = p.product_id LEFT JOIN product_sizes ps ON ci.size_id = ps.size_id WHERE ci.user_id = ?';
+$sql = 'SELECT ci.*, p.name, p.price, p.image, ps.size_name, ps.extra_price FROM cart_items ci JOIN products p ON ci.product_id = p.product_id LEFT JOIN product_sizes ps ON ci.size_id = ps.size_id WHERE ci.user_id = ?';
 $stmt = $conn->prepare($sql);
 $stmt->bind_param('i', $user_id);
 $stmt->execute();
@@ -278,11 +278,16 @@ while ($item = $res->fetch_assoc()) {
                             <?php foreach ($cart_items as $item): ?>
                                 <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
                                     <div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-                                        <img src="<?php echo '../../Photos/' . htmlspecialchars($item['image']); ?>" class="w-12 h-12 object-cover rounded-lg" alt="<?php echo htmlspecialchars($item['name']); ?>" />
+                                        <img src="<?php echo $base_url . '/' . ($item['image'] ?: 'Photos/placeholder.png'); ?>" class="w-12 h-12 object-cover rounded-lg" alt="<?php echo htmlspecialchars($item['name']); ?>" />
                                     </div>
                                     <div class="flex-1">
-                                        <h4 class="font-medium text-sm"><?php echo $item['name']; ?></h4>
-                                        <p class="text-xs text-gray-600">SL: <?php echo $item['quantity']; ?></p>
+                                        <h4 class="font-medium text-sm leading-tight"><?php echo htmlspecialchars($item['name']); ?></h4>
+                                        <?php if (!empty($item['size_name'])): ?>
+                                            <p class="text-xs text-gray-500 font-semibold">Size: <?php echo htmlspecialchars($item['size_name']); ?></p>
+                                        <?php endif; ?>
+                                        <p class="text-xs text-gray-600 mt-1">
+                                            SL: <span class="font-bold"><?php echo $item['quantity']; ?></span>
+                                        </p>
                                     </div>
                                     <div class="text-right">
                                         <p class="font-bold text-orange-600"><?php echo number_format($item['price'] * $item['quantity']); ?>đ</p>

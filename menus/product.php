@@ -90,7 +90,7 @@ $sizeResult = $sizeQuery->get_result();
                 <div class="text-orange-600 font-bold text-2xl mb-4" id="product-price"><?php echo number_format($product['price'], 0, ',', '.'); ?> đ</div>
                 <div class="mb-4 text-gray-700 text-base leading-relaxed"><?php echo $product['description'] ?: '<span class="italic text-gray-400">Chưa có mô tả cho sản phẩm này.</span>'; ?></div>
                 <div class="flex gap-4 mt-6">
-                    <button id="add-to-cart-btn" class="btn-orange hover:bg-orange-600 text-white px-8 py-3 rounded-xl font-bold text-lg shadow transition duration-200"><i class="fa fa-shopping-cart mr-2"></i>Đặt món ngay</button>
+                    <button id="add-to-cart-btn" class="btn-orange hover:bg-orange-600 text-white px-8 py-3 rounded-xl font-bold text-lg shadow transition duration-200"><i class="fa fa-shopping-cart mr-2"></i>Thêm món ngay</button>
                     <a href="menus.php?cat=<?php echo generateSlug($product['category_name']); ?>" class="bg-gray-100 hover:bg-pink-100 text-pink-600 px-6 py-3 rounded-xl font-bold text-lg shadow transition duration-200"><i class="fa fa-arrow-left mr-2"></i>Quay lại menu</a>
                 </div>
             </div>

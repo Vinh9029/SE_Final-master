@@ -17,7 +17,7 @@ $stmt->bind_param('i', $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 while ($row = $result->fetch_assoc()):
-    $img = $row['image'] ? '../../Photos/' . $row['image'] : '../../Photos/default.jpg';
+    $img = $base_url . '/' . ($row['image'] ?: 'Photos/placeholder.png');
     $size = $row['size_name'] ? $row['size_name'] : '';
     $base_price = (float)$row['price'];
     $extra_price = (float)$row['extra_price'];
