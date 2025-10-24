@@ -1,4 +1,4 @@
--- Active: 1760965895027@@127.0.0.1@3306@theoldflavour
+-- Active: 1758856835071@@localhost@3306@theoldflavour
 -- Database schema for SE_Final-Cart-Checkout
 
 DROP DATABASE IF EXISTS theoldflavour;
@@ -59,7 +59,9 @@ CREATE TABLE order_items (
     order_id INT,
     product_id INT,
     quantity INT NOT NULL,
-    price DECIMAL(10,2) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    size_id INT NULL,
+    take_note VARCHAR(255) NULL,
     FOREIGN KEY (order_id) REFERENCES orders(order_id),
     FOREIGN KEY (product_id) REFERENCES products(product_id)
 );
@@ -134,6 +136,8 @@ ALTER TABLE cart_items ADD COLUMN size_id INT NULL AFTER product_id;
 ALTER TABLE cart_items ADD COLUMN take_note VARCHAR(255)  AFTER size_id;
 
 ALTER TABLE orders ADD COLUMN voucher_code VARCHAR(50) DEFAULT NULL AFTER total;
+
+ALTER TABLE orders ADD COLUMN discount_amount DECIMAL(10, 2) DEFAULT 0 AFTER voucher_code;
 
 -- Bảng cho chức năng Blog
 CREATE TABLE blogs (

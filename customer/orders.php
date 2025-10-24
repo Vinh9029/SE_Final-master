@@ -55,7 +55,7 @@ function get_status_label($status) {
                 <span class="<?php echo $status_class; ?> px-2 py-1 rounded-full font-bold"><?php echo $status_text; ?></span>
               </td>
               <td class="px-4 py-2 text-orange-600 font-bold"><?php echo number_format($order['total'], 0, ',', '.'); ?>đ</td>
-              <td class="px-4 py-2"><button class="btn-orange hover:bg-orange-600 text-white px-4 py-1 rounded-xl font-bold shadow transition" onclick="viewOrderDetail(<?php echo $order['order_id']; ?>)">Xem</button></td>
+              <td class="px-4 py-2"><button class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-1 rounded-xl font-bold shadow transition" onclick="viewOrderDetail(<?php echo $order['order_id']; ?>)">Xem</button></td>
             </tr>
           <?php endforeach; ?>
         <?php endif; ?>
@@ -65,8 +65,8 @@ function get_status_label($status) {
 </div>
 
 <!-- Order Detail Modal -->
-<div id="orderDetailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
-    <div id="orderDetailContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+<div id="orderDetailModal" onclick="closeModal()" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4 transition-opacity duration-300">
+    <div id="orderDetailContent" onclick="event.stopPropagation()" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col transform transition-transform duration-300 scale-95">
         <!-- Modal Header -->
         <div class="flex justify-between items-center p-4 border-b bg-gray-50 rounded-t-2xl">
             <h2 class="text-xl font-bold text-gray-800">Chi tiết đơn hàng</h2>
@@ -86,14 +86,35 @@ function get_status_label($status) {
 </div>
 
 <script>
+// JavaScript equivalent of the PHP get_status_label function
+function get_status_label(status) {
+    switch (status) {
+        case 'pending': return ['Chờ xử lý', 'bg-gray-100 text-gray-700'];
+        case 'processing': return ['Đang xử lý', 'bg-yellow-100 text-yellow-700'];
+        case 'completed': return ['Đã giao', 'bg-green-100 text-green-700'];
+        case 'cancelled': return ['Đã hủy', 'bg-red-100 text-red-700'];
+        default: return ['Không xác định', 'bg-gray-100 text-gray-700'];
+    }
+}
+
 function closeModal() {
-    document.getElementById('orderDetailModal').classList.add('hidden');
+    const modal = document.getElementById('orderDetailModal');
+    const content = document.getElementById('orderDetailContent');
+    modal.classList.add('opacity-0');
+    content.classList.add('scale-95');
+    setTimeout(() => modal.classList.add('hidden'), 300); // Wait for animation to finish
 }
 
 function viewOrderDetail(orderId) {
     const modal = document.getElementById('orderDetailModal');
-    const modalBody = document.getElementById('modalBody');
     modal.classList.remove('hidden');
+    // Trigger fade-in and scale-up animation
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        document.getElementById('orderDetailContent').classList.remove('scale-95');
+    }, 10);
+
+    const modalBody = document.getElementById('modalBody');
     modalBody.innerHTML = `<div class="text-center py-10">
                                 <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-orange-500 mx-auto"></div>
                                 <p class="mt-4 text-gray-600">Đang tải dữ liệu...</p>
@@ -110,8 +131,11 @@ function viewOrderDetail(orderId) {
                     <div class="flex items-center gap-4 py-2 border-b last:border-b-0">
                         <img src="${data.base_url}/${item.image || 'Photos/placeholder.png'}" class="w-12 h-12 object-cover rounded-lg">
                         <div class="flex-grow">
-                            <p class="font-semibold">${item.name}</p>
-                            <p class="text-sm text-gray-500">Số lượng: ${item.quantity}</p>
+                            <p class="font-semibold">${item.name} ${item.size_name ? `<span class='text-xs text-gray-500'>(${item.size_name})</span>` : ''}</p>
+                            <p class="text-sm text-gray-500">Số lượng: 
+                                <span class="font-bold">${item.quantity}</span>
+                            </p>
+                            ${item.take_note ? `<p class="text-xs text-gray-500 italic">Ghi chú: ${item.take_note}</p>` : ''}
                         </div>
                         <div class="text-right">
                             <p class="font-semibold text-gray-800">${(item.price * item.quantity).toLocaleString('vi-VN')}đ</p>
@@ -137,14 +161,14 @@ function viewOrderDetail(orderId) {
                     </div>
                     <h3 class="font-bold text-lg mb-2">Các sản phẩm</h3>
                     <div class="space-y-2 mb-4">${itemsHtml}</div>
-                    <div class="border-t pt-4">
+                    <div class="border-t-2 border-dashed pt-4 space-y-2">
                         <div class="flex justify-between items-center">
                             <span class="text-gray-600">Tạm tính:</span>
-                            <span class="font-semibold">${(order.total + order.discount_amount).toLocaleString('vi-VN')}đ</span>
+                            <span class="font-semibold">${(Number(order.total) + (Number(order.discount_amount) || 0)).toLocaleString('vi-VN')}đ</span>
                         </div>
                         ${discountHtml}
-                        <div class="flex justify-between items-center text-xl font-bold mt-2">
-                            <span>Tổng cộng:</span>
+                        <div class="flex justify-between items-center text-xl font-bold pt-2 border-t">
+                            <span>Thành tiền:</span>
                             <span class="text-orange-600">${order.total.toLocaleString('vi-VN')}đ</span>
                         </div>
                     </div>`;

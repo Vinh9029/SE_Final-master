@@ -34,9 +34,10 @@ if (!$order) {
 
 // Fetch order items
 $stmt = $conn->prepare(
-    "SELECT oi.quantity, oi.price, p.name, p.image 
+    "SELECT oi.quantity, oi.price, oi.take_note, p.name, p.image, ps.size_name
      FROM order_items oi 
      JOIN products p ON oi.product_id = p.product_id 
+     LEFT JOIN product_sizes ps ON oi.size_id = ps.size_id
      WHERE oi.order_id = ?"
 );
 $stmt->bind_param("i", $order_id);
