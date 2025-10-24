@@ -59,7 +59,7 @@ $pagedItems = array_slice($allItems, $offset, $itemsPerPage);
         .footer-bg { background: #3d2c1a; }
     </style>
 </head>
-<body class="bg-gray-50 font-sans">
+<body class="bg-pink-50 font-sans">
     <!-- Header -->
     <?php include_once __DIR__ . '/../includes/header.php'; ?>
     <!-- Hero Banner Slider -->

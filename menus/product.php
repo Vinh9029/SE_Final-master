@@ -51,7 +51,7 @@ $sizeResult = $sizeQuery->get_result();
     </style>
 </head>
 
-<body class="bg-gray-50 font-sans">
+<body class="bg-pink-50 font-sans">
     <?php include_once __DIR__ . '/../includes/header.php'; ?>
     <div class="max-w-4xl mx-auto px-4 py-8">
         <!-- Breadcrumb -->
@@ -97,6 +97,21 @@ $sizeResult = $sizeQuery->get_result();
         </div>
     </div>
     <?php include_once __DIR__ . '/../includes/footer.php'; ?>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-20 right-5 bg-green-500 text-white py-3 px-6 rounded-xl shadow-lg transform translate-x-full transition-transform duration-300 ease-in-out z-50">
+        <i class="fa fa-check-circle mr-2"></i>
+        <span id="toast-message"></span>
+    </div>
+    <style>
+        #toast.show {
+            transform: translateX(0);
+        }
+        #toast.error {
+            background-color: #ef4444; /* bg-red-500 */
+        }
+    </style>
+
     <script>
         // Cập nhật giá khi chọn size
         setTimeout(function() {
@@ -110,6 +125,21 @@ $sizeResult = $sizeQuery->get_result();
             });
         }, 100);
 
+        // Toast function
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            toastMessage.textContent = message;
+            if (isError) {
+                toast.classList.add('error');
+            } else {
+                toast.classList.remove('error');
+            }
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
         // Xử lý thêm vào giỏ hàng
         document.getElementById('add-to-cart-btn').onclick = function() {
             const productId = <?php echo $product['product_id']; ?>;
@@ -126,19 +156,12 @@ $sizeResult = $sizeQuery->get_result();
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    // Gọi API lấy số lượng mới và cập nhật badge
-                    fetch('/customer/cart/get_cart_count.php')
-                        .then(res => res.json())
-                        .then(countData => {
-                            const badge = document.querySelector('.fa-shopping-cart + span');
-                            if (badge) {
-                                badge.textContent = countData.count;
-                                badge.style.display = countData.count > 0 ? 'inline-block' : 'none';
-                            }
-                        });
-                    alert('Đã thêm vào giỏ hàng!');
+                    showToast('Đã thêm vào giỏ hàng!');
+                    setTimeout(() => {
+                        window.location.reload(); // Tự động tải lại trang sau khi toast biến mất
+                    }, 800);
                 } else {
-                    alert(data.message);
+                    showToast(data.message, true);
                 }
             });
         };

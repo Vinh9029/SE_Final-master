@@ -142,6 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             outline: none;
             box-sizing: border-box;
         }
+        
         .toggle-password {
             position: absolute;
             right: 18px;
@@ -157,6 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             display: flex;
             align-items: center; 
             justify-content: center;
+            padding-left: 30px;
         }
 
         .input-group input::placeholder {
@@ -447,7 +449,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 text.innerText = '';
             }
         }
+        function togglePasswordVisibility(inputId, iconId) {
+            var input = document.getElementById(inputId);
+            var icon = document.getElementById(iconId);
+            if (input.type === "password") {
+                input.type = "text";
+                icon.className = "fa-regular fa-eye-slash";
+            } else {
+                input.type = "password";
+                icon.className = "fa-regular fa-eye";
+            }
+        }
+        
     </script>
 </body>
-
 </html>

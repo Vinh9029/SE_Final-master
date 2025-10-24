@@ -61,7 +61,7 @@ if (isset($_SESSION['user_id'])) {
                 searchDropdown.innerHTML = '<div class="py-3 px-4 text-center"><i class="fa fa-spinner fa-spin text-pink-500"></i> Đang tìm kiếm...</div>';
                 clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(() => {
-                    fetch(`/menus/searchProduct.php?q=" + encodeURIComponent(val) + "`)
+                    fetch(`<?php echo $base_url; ?>/menus/searchProduct.php?q=${encodeURIComponent(val)}`)
                         .then(res => res.json())
                         .then(data => {
                             if (!Array.isArray(data) || data.length === 0) {
@@ -70,8 +70,8 @@ if (isset($_SESSION['user_id'])) {
                             }
                             let html = '<div class="py-2 px-4 font-bold text-pink-600 border-b">Sản phẩm</div>';
                             data.forEach(item => {
-                                html += `<a href="/menus/product.php?slug=${item.slug}" class="flex items-center gap-3 px-4 py-2 hover:bg-pink-50 transition">
-                                    <img src="${item.image}" alt="${item.name}" class="w-12 h-12 object-cover rounded shadow border border-pink-100" />
+                                html += `<a href="<?php echo $base_url; ?>/menus/product.php?slug=${item.slug}" class="flex items-center gap-3 px-4 py-2 hover:bg-pink-50 transition">
+                                    <img src="<?php echo $base_url; ?>/${item.image}" alt="${item.name}" class="w-12 h-12 object-cover rounded shadow border border-pink-100" />
                                     <div class="flex-1">
                                         <div class="font-bold text-pink-600">${item.name}</div>
                                         <div class="text-orange-600 font-semibold text-sm">${item.price}</div>
