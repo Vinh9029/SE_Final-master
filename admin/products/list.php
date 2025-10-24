@@ -99,10 +99,11 @@ $result = $conn->query($sql);
         </tr>
         <?php endwhile; ?>
       </tbody>
+      <!-- Pagination of slicing products  -->
     </table>
     <div class="mt-4 flex gap-2">
       <?php for($i=1;$i<=$totalPages;$i++): ?>
-        <a href="?page=<?= $i ?>&cat=<?= urlencode($cat) ?>&search=<?= urlencode($search) ?>" class="px-3 py-1 rounded <?= $i==$page ? 'bg-pink-500 text-white' : 'bg-gray-100 text-gray-700' ?>"><?= $i ?></a>
+        <a href="#" data-page="products/list.php?page=<?= $i ?>&cat=<?= urlencode($cat) ?>&search=<?= urlencode($search) ?>" class="px-3 py-1 rounded <?= $i==$page ? 'bg-pink-500 text-white' : 'bg-gray-100 text-gray-700' ?>"><?= $i ?></a>
       <?php endfor; ?>
     </div>
   </div>
@@ -174,7 +175,7 @@ $result = $conn->query($sql);
   // AJAX navigation for CRUD links and pagination
   function bindAjaxLinks() {
     document.querySelectorAll('a[data-page]').forEach(link => {
-      link.addEventListener('click', function(e) {
+      link.onclick = function(e) {
         e.preventDefault();
         const page = this.getAttribute('data-page') || this.getAttribute('href');
         const isDelete = page && page.includes('delete.php');
@@ -235,11 +236,12 @@ $result = $conn->query($sql);
           fetch(page)
             .then(res => res.text())
             .then(html => {
-              setTimeout(() => { mainContent.innerHTML = html; }, 400);
+              // setTimeout is not strictly necessary but can smooth out the transition
+              mainContent.innerHTML = html;
               window.scrollTo({ top: mainContent.offsetTop - 80, behavior: 'smooth' });
             });
         }
-      });
+      };
     });
   }
   bindAjaxLinks();

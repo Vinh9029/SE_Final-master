@@ -32,7 +32,7 @@ $result = $conn->query($sql);
           <td class="px-4 py-2"><?= htmlspecialchars($row['phone']) ?></td>
           <td class="px-4 py-2"><?= htmlspecialchars($row['address']) ?></td>
           <td class="px-4 py-2"><?= $row['created_at'] ?></td>
-          <td class="px-4 py-2"><a href="detail.php?id=<?= $row['user_id'] ?>" class="text-blue-500 hover:underline">Xem</a></td>
+          <td class="px-4 py-2"><a href="customers/detail.php?id=<?= $row['user_id'] ?>" class="text-blue-500 hover:underline">Xem</a></td>
         </tr>
         <?php endwhile; ?>
       </tbody>
