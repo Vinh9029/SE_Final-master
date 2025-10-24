@@ -4,13 +4,13 @@
         <div>
             <div class="flex items-center gap-2 mb-3">
                 <img src="<?php echo $base_url; ?>/Photos/banner.jpg" alt="Logo" class="h-12 w-10 object-cover rounded-full shadow" />
-                <span class="text-xl font-bold text-pink-400">Old Favour</span>
+                <span class="text-xl font-bold text-pink-400">Old Flavour</span>
             </div>
             <div class="mb-2 text-pink-200 italic">Hạnh phúc trong từng tách cà phê!</div>
             <div class="text-sm flex flex-col gap-1">
                 <span><i class="fa fa-map-marker-alt text-pink-400 mr-2"></i>123 Main St, Ho Chi Minh City</span>
                 <span><i class="fa fa-phone-alt text-pink-400 mr-2"></i>(123) 456-7890</span>
-                <span><i class="fa fa-envelope text-pink-400 mr-2"></i>info@oldfavourcoffee.com</span>
+                <span><i class="fa fa-envelope text-pink-400 mr-2"></i>info@oldflavourcoffee.com</span>
             </div>
         </div>
         <!-- Cột 2: Liên kết nhanh -->

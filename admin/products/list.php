@@ -59,16 +59,12 @@ $result = $conn->query($sql);
         </div>
       <?php endif; ?>
       <div class="mb-4 flex items-center gap-2">
-        <form method="get" class="flex gap-2">
-          <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
-          <select name="cat" class="border rounded px-2 py-1">
-            <option value="">Tất cả danh mục</option>
-            <?php foreach($catList as $catName): ?>
-              <option value="<?= htmlspecialchars($catName) ?>" <?= $cat == $catName ? 'selected' : '' ?>><?= htmlspecialchars($catName) ?></option>
-            <?php endforeach; ?>
-          </select>
-          <button class="bg-gray-200 px-3 py-1 rounded" type="submit">Lọc</button>
-        </form>
+        <select name="cat" class="border rounded px-2 py-1">
+          <option value="">Tất cả danh mục</option>
+          <?php foreach($catList as $catName): ?>
+            <option value="<?= htmlspecialchars($catName) ?>" <?= $cat == $catName ? 'selected' : '' ?>><?= htmlspecialchars($catName) ?></option>
+          <?php endforeach; ?>
+        </select>
         <input type="text" id="searchInput" placeholder="Tìm kiếm sản phẩm..." value="<?= htmlspecialchars($search) ?>" class="border rounded px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-200">
         <button id="clearSearch" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded font-semibold"><i class="fa fa-times"></i></button>
       </div>
@@ -109,133 +105,50 @@ $result = $conn->query($sql);
   </div>
 </div>
 <script>
-  // Table sorting
-  document.querySelectorAll('th.sortable').forEach(function(th) {
-    th.addEventListener('click', function() {
-      const table = document.getElementById('productTable');
-      const tbody = table.querySelector('tbody');
-      const rows = Array.from(tbody.querySelectorAll('tr'));
-      const idx = Array.from(th.parentNode.children).indexOf(th);
-      const sortKey = th.getAttribute('data-sort');
-      let asc = !th.classList.contains('sorted-asc');
-      // Remove sort classes from all headers
-      table.querySelectorAll('th').forEach(h => h.classList.remove('sorted-asc', 'sorted-desc'));
-      th.classList.add(asc ? 'sorted-asc' : 'sorted-desc');
-      // Sort rows
-      rows.sort(function(a, b) {
-        let va = a.children[idx].getAttribute('data-value');
-        let vb = b.children[idx].getAttribute('data-value');
-        // Numeric sort for price, id
-        if (['product_id', 'price', 'is_signature'].includes(sortKey)) {
-          va = parseFloat(va) || 0;
-          vb = parseFloat(vb) || 0;
-        }
-        return asc ? (va > vb ? 1 : va < vb ? -1 : 0) : (va < vb ? 1 : va > vb ? -1 : 0);
-      });
-      // Re-append sorted rows
-      rows.forEach(r => tbody.appendChild(r));
-    });
-  });
+  // --- Refactored and Unified AJAX/Search/Filter Logic ---
 
-  // Search functionality with debounce for server-side
-  const searchInput = document.getElementById('searchInput');
-  const clearSearch = document.getElementById('clearSearch');
-  const currentCat = '<?= htmlspecialchars($cat) ?>';
-  const catSelect = document.querySelector('select[name="cat"]');
+  // Check if the loadPage function exists in the parent window
+  const canAjax = window.parent && typeof window.parent.loadPage === 'function';
+
+  // Function to build URL with current filters
+  function buildUrl(page, baseFile = 'products/list.php') {
+    const term = document.getElementById('searchInput').value.trim();
+    const category = document.querySelector('select[name="cat"]').value;
+    const params = new URLSearchParams({
+      page: page,
+      search: term,
+      cat: category
+    });
+    return `${baseFile}?${params.toString()}`;
+  }
+
+  // Attach event listeners for search and filter
   let searchTimeout;
-
-  function performSearch() {
+  document.getElementById('searchInput').addEventListener('input', () => {
     clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-      const term = searchInput.value.trim();
-      const category = catSelect.value;
-      const url = `products/list.php?page=1&search=${encodeURIComponent(term)}&cat=${encodeURIComponent(category)}`;
-      window.parent.loadPage(url);
-    }, 500);
-  }
-
-  searchInput.addEventListener('input', performSearch);
-  catSelect.addEventListener('change', performSearch);
-
-  clearSearch.addEventListener('click', () => {
-    searchInput.value = '';
-    catSelect.value = '';
-    const url = 'products/list.php?page=1';
-    window.parent.loadPage(url);
+    searchTimeout = setTimeout(() => canAjax && window.parent.loadPage(buildUrl(1)), 500);
   });
 
+  document.querySelector('select[name="cat"]').addEventListener('change', () => {
+    canAjax && window.parent.loadPage(buildUrl(1));
+  });
 
-  // AJAX navigation for CRUD links and pagination
-  function bindAjaxLinks() {
-    document.querySelectorAll('a[data-page]').forEach(link => {
-      link.onclick = function(e) {
-        e.preventDefault();
-        const page = this.getAttribute('data-page') || this.getAttribute('href');
-        const isDelete = page && page.includes('delete.php');
-        
-        if (isDelete) {
-          // Extract product_id from the data-page URL
-          const url = new URL(page, window.location.origin);
-          const productId = url.searchParams.get('id');
-          
-          if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này? Hành động này không thể hoàn tác.')) {
-            // Proceed with AJAX delete
-            if (page && productId && window.parent && window.parent.document.getElementById('admin-main-content')) {
-              const mainContent = window.parent.document.getElementById('admin-main-content');
-              mainContent.innerHTML = `<div class='flex flex-col items-center justify-center h-full'><div class='animate-pulse w-24 h-24 bg-pink-100 rounded-full mb-6'></div><div class='text-center text-gray-400 mt-10'><i class='fa fa-spinner fa-spin text-4xl mb-4'></i><div class='font-bold text-lg'>Đang xóa...</div></div></div>`;
-              
-              const formData = new URLSearchParams();
-              formData.append('product_id', productId);
-              
-              fetch(page, { 
-                method: 'POST', 
-                headers: { 
-                  'X-Requested-With': 'XMLHttpRequest',
-                  'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: formData
-              })
-                .then(res => {
-                  if (res.ok) {
-                    return res.json();
-                  } else {
-                    throw new Error('Network response was not ok');
-                  }
-                })
-                .then(data => {
-                  if (data.success) {
-                    // Reload the list page to show updated data
-                    window.parent.loadPage('products/list.php');
-                    alert(data.message);
-                  } else {
-                    alert('Lỗi: ' + data.message);
-                    window.parent.loadPage('products/list.php');
-                  }
-                })
-                .catch(err => {
-                  console.error('Delete error:', err);
-                  alert('Lỗi khi xóa sản phẩm. Vui lòng thử lại.');
-                  window.parent.loadPage('products/list.php');
-                });
-            }
-          }
-          return; // Don't load the page
-        }
-        
-        // For non-delete pages
-        if (page && window.parent && window.parent.document.getElementById('admin-main-content')) {
-          const mainContent = window.parent.document.getElementById('admin-main-content');
-          mainContent.innerHTML = `<div class='flex flex-col items-center justify-center h-full'><div class='animate-pulse w-24 h-24 bg-pink-100 rounded-full mb-6'></div><div class='text-center text-gray-400 mt-10'><i class='fa fa-spinner fa-spin text-4xl mb-4'></i><div class='font-bold text-lg'>Đang tải...</div></div></div>`;
-          fetch(page)
-            .then(res => res.text())
-            .then(html => {
-              // setTimeout is not strictly necessary but can smooth out the transition
-              mainContent.innerHTML = html;
-              window.scrollTo({ top: mainContent.offsetTop - 80, behavior: 'smooth' });
-            });
-        }
-      };
+  document.getElementById('clearSearch').addEventListener('click', () => {
+    document.getElementById('searchInput').value = '';
+    document.querySelector('select[name="cat"]').value = '';
+    canAjax && window.parent.loadPage('products/list.php?page=1');
+  });
+
+  // Bind all data-page links (pagination, edit, delete, add)
+  document.querySelectorAll('a[data-page]').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const pageUrl = this.getAttribute('data-page');
+      if (canAjax) {
+        window.parent.loadPage(pageUrl);
+      } else {
+        window.location.href = pageUrl; // Fallback for direct access
+      }
     });
-  }
-  bindAjaxLinks();
+  });
 </script>
