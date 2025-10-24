@@ -1,13 +1,12 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-include_once __DIR__ . '/../config.php'; // Đảm bảo $base_url được định nghĩa
-require_once __DIR__ . '/../vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 function sendGiftVoucher($email, $username, $voucher_code) {
+    include_once __DIR__ . '/../config.php'; // Đảm bảo $base_url được định nghĩa
+    require_once __DIR__ . '/../vendor/autoload.php';
+
     $mail = new PHPMailer(true);
     try {
         // $mail->SMTPDebug = 2; // Bật để gỡ lỗi nếu cần, sau đó hãy tắt đi

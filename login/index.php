@@ -292,6 +292,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
+    <?php include_once __DIR__ . '/../includes/returnHome.php'; ?>
     <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
         <div class="side-image-box">
             <img id="login_banner" src="../Photos/login_banner.jpg" alt="Login Illustration" style="width:100%; height:100%; object-fit:cover; border-radius:20px 0 0 20px;" />

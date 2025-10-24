@@ -124,8 +124,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border: none;
             padding: 0;
             display: flex;
-            align-items: center;
-            padding-left: 30px;
+            align-items: center; 
+            justify-content: center;
         }
 
         .input-group input {
@@ -263,6 +263,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body>
+    <?php include_once __DIR__ . '/../includes/returnHome.php'; ?>
     <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
         <div class="update-container">
             <div class="profile-icon" style="cursor:pointer;" onclick="window.location.href='user.php'">

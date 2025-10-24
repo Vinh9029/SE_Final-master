@@ -264,6 +264,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['email'])) {
 </head>
 
 <body>
+    <?php include_once __DIR__ . '/../includes/returnHome.php'; ?>
     <div id="loadingOverlay">
         <div class="loader"></div>
     </div>
