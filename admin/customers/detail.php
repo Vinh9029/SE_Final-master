@@ -1,5 +1,6 @@
 <?php
 session_start();
+include_once '../../config.php';
 include_once '../../database/db_connection.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
@@ -15,20 +16,16 @@ if (!$customer_id) {
 }
 
 // Fetch customer information
-// Use a JOIN to get the rank name directly from the database
 $stmt = $conn->prepare("
     SELECT 
         u.user_id, 
         u.username, 
         u.email, 
         u.full_name, 
-        u.phone, 
-        u.created_at, 
-        u.points,
-        mr.rank_name,
-        mr.theme_class
+        u.phone,
+        u.created_at,
+        u.avatar_image
     FROM users u
-    LEFT JOIN membership_ranks mr ON u.rank_id = mr.rank_id
     WHERE u.user_id = ? AND u.role = 'customer'
 ");
 $stmt->bind_param("s", $customer_id);
@@ -36,16 +33,39 @@ $stmt->execute();
 $customer = $stmt->get_result()->fetch_assoc();
 
 
+// Fetch loyalty points and determine rank
+$points_stmt = $conn->prepare("SELECT points FROM loyalty_points WHERE user_id = ?");
+$points_stmt->bind_param("i", $customer_id);
+$points_stmt->execute();
+$points_result = $points_stmt->get_result()->fetch_assoc();
+$customer['points'] = $points_result['points'] ?? 0;
+
+// Determine rank based on points (example logic)
+$rank_name = 'Đồng';
+$theme_class = 'bg-yellow-200 text-yellow-800';
+if ($customer['points'] >= 1000) {
+    $rank_name = 'Vàng';
+    $theme_class = 'bg-yellow-400 text-yellow-900';
+} elseif ($customer['points'] >= 500) {
+    $rank_name = 'Bạc';
+    $theme_class = 'bg-gray-300 text-gray-800';
+}
 if (!$customer) {
     echo "<div class='p-4 bg-red-100 border border-red-500 text-red-700'>Không tìm thấy khách hàng.</div>";
     exit;
 }
 
 // Fetch customer order history
-$order_stmt = $conn->prepare("SELECT order_id, order_date, total, status FROM orders WHERE user_id = ? ORDER BY order_date DESC");
+$order_stmt = $conn->prepare("SELECT order_id, order_date, total, status FROM orders WHERE user_id = ? ORDER BY order_date DESC LIMIT 5");
 $order_stmt->bind_param("s", $customer_id);
 $order_stmt->execute();
 $orders = $order_stmt->get_result();
+
+// Fetch order stats
+$stats_stmt = $conn->prepare("SELECT COUNT(order_id) as total_orders, SUM(total) as total_spent FROM orders WHERE user_id = ?");
+$stats_stmt->bind_param("i", $customer_id);
+$stats_stmt->execute();
+$stats = $stats_stmt->get_result()->fetch_assoc();
 
 // Function to get status style
 function getStatusClass($status) {
@@ -63,44 +83,89 @@ function getStatusClass($status) {
 
 ?>
 
-<div class="max-w-2xl mx-auto py-8">
-  <div class="bg-white rounded-2xl shadow-xl p-8">
-    <h1 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2"><i class="fa fa-user text-blue-500"></i> Chi tiết khách hàng KH<?php echo htmlspecialchars($customer['user_id']); ?></h1>
-    <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="font-semibold text-gray-700">Tên khách hàng: <span class="text-pink-600 font-normal"><?php echo htmlspecialchars($customer['full_name'] ?? 'N/A'); ?></span></div>
-      <div class="font-semibold text-gray-700">Email: <span class="text-blue-600 font-normal"><?php echo htmlspecialchars($customer['email'] ?? 'N/A'); ?></span></div>
-      <div class="font-semibold text-gray-700">Số điện thoại: <span class="text-orange-600 font-normal"><?php echo htmlspecialchars($customer['phone'] ?? 'N/A'); ?></span></div>
-      <div class="font-semibold text-gray-700">Ngày đăng ký: <span class="text-yellow-600 font-normal"><?php echo date("d/m/Y", strtotime($customer['created_at'])); ?></span></div>
-      <div class="font-semibold text-gray-700">Điểm tích lũy: <span class="text-yellow-500 font-normal"><?php echo number_format($customer['points'] ?? 0); ?> ⭐</span></div>
-      <div class="font-semibold text-gray-700">Hạng thành viên: <span class="<?php echo htmlspecialchars($customer['theme_class'] ?? 'bg-gray-100 text-gray-700'); ?> px-2 py-1 rounded-full font-bold"><?php echo htmlspecialchars($customer['rank_name'] ?? 'Chưa có hạng'); ?></span></div>
+<div class="max-w-4xl mx-auto py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Chi Tiết Khách Hàng</h1>
+        <a href="#" data-page="customers/list.php" class="inline-flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-bold shadow-sm transition"><i class="fa fa-arrow-left"></i> Quay lại</a>
     </div>
-    <div class="mt-6">
-      <h2 class="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2"><i class="fa fa-history text-pink-500"></i> Lịch sử đơn hàng</h2>
-      <?php if ($orders->num_rows > 0): ?>
-      <table class="w-full text-left border-collapse mb-2">
-        <thead>
-          <tr class="bg-blue-100 text-blue-700">
-            <th class="px-4 py-2 rounded-tl-xl">Mã đơn</th>
-            <th class="px-4 py-2">Ngày đặt</th>
-            <th class="px-4 py-2">Tổng tiền</th>
-            <th class="px-4 py-2 rounded-tr-xl">Trạng thái</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php while ($order = $orders->fetch_assoc()): ?>
-          <tr class="hover:bg-blue-50 transition">
-            <td class="px-4 py-2 font-bold border-b border-gray-200">#<?php echo htmlspecialchars($order['order_id']); ?></td>
-            <td class="px-4 py-2 border-b border-gray-200"><?php echo date("d/m/Y", strtotime($order['order_date'])); ?></td>
-            <td class="px-4 py-2 text-orange-600 font-bold border-b border-gray-200"><?php echo number_format($order['total_amount'], 0, ',', '.'); ?>đ</td>
-            <td class="px-4 py-2 border-b border-gray-200"><span class="<?php echo getStatusClass($order['status']); ?> px-2 py-1 rounded-full font-bold"><?php echo htmlspecialchars(ucfirst($order['status'])); ?></span></td>
-          </tr>
-          <?php endwhile; ?>
-        </tbody>
-      </table>
-      <?php else: ?>
-        <p class="text-gray-500 mt-4">Chưa có đơn hàng nào.</p>
-      <?php endif; ?>
+
+    <!-- Profile Header -->
+    <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 flex items-center gap-6">
+        <?php
+        $avatar_url = $base_url . '/' . ($customer['avatar_image'] ?? 'Photos/default_avatar.png');
+        $customer_name = htmlspecialchars($customer['full_name'] ?? $customer['username']);
+        if (!($customer['avatar_image'] && file_exists(__DIR__ . '/../../' . $customer['avatar_image']))) {
+            $initial = mb_substr($customer_name, 0, 1);
+            $avatar_url = "https://ui-avatars.com/api/?name=" . urlencode($initial) . "&background=fbcfe8&color=db2777&size=128";
+        }
+        ?>
+        <img src="<?php echo $avatar_url; ?>" alt="Avatar" class="w-24 h-24 rounded-full object-cover border-4 border-pink-200">
+        <div>
+            <h2 class="text-2xl font-bold text-pink-600"><?php echo $customer_name; ?></h2>
+            <p class="text-gray-500">@<?php echo htmlspecialchars($customer['username']); ?></p>
+            <div class="mt-2">
+                <span class="<?php echo htmlspecialchars($theme_class); ?> px-3 py-1 text-sm rounded-full font-bold"><?php echo htmlspecialchars($rank_name); ?></span>
+            </div>
+        </div>
     </div>
-    <a href="#" data-page="customers/list.php" class="mt-6 inline-flex items-center gap-2 bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded-lg font-bold shadow transition"><i class="fa fa-arrow-left"></i> Quay lại danh sách khách hàng</a>
-  </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white rounded-2xl shadow-lg p-5 flex items-center gap-4">
+            <i class="fa fa-star text-3xl text-yellow-400"></i>
+            <div>
+                <div class="text-gray-500 text-sm">Điểm tích lũy</div>
+                <div class="text-2xl font-bold text-gray-800"><?php echo number_format($customer['points'] ?? 0); ?></div>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl shadow-lg p-5 flex items-center gap-4">
+            <i class="fa fa-receipt text-3xl text-orange-500"></i>
+            <div>
+                <div class="text-gray-500 text-sm">Tổng đơn hàng</div>
+                <div class="text-2xl font-bold text-gray-800"><?php echo number_format($stats['total_orders'] ?? 0); ?></div>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl shadow-lg p-5 flex items-center gap-4">
+            <i class="fa fa-coins text-3xl text-green-500"></i>
+            <div>
+                <div class="text-gray-500 text-sm">Tổng chi tiêu</div>
+                <div class="text-2xl font-bold text-gray-800"><?php echo number_format($stats['total_spent'] ?? 0, 0, ',', '.'); ?>đ</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details & Order History -->
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <!-- Left: Details -->
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-xl p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Thông tin liên hệ</h3>
+            <div class="space-y-3 text-sm">
+                <p><i class="fa fa-envelope text-blue-500 w-5"></i> <strong class="text-gray-600">Email:</strong> <?php echo htmlspecialchars($customer['email'] ?? 'N/A'); ?></p>
+                <p><i class="fa fa-phone text-orange-500 w-5"></i> <strong class="text-gray-600">SĐT:</strong> <?php echo htmlspecialchars($customer['phone'] ?? 'N/A'); ?></p>
+                <p><i class="fa fa-calendar-alt text-green-500 w-5"></i> <strong class="text-gray-600">Ngày tham gia:</strong> <?php echo date("d/m/Y", strtotime($customer['created_at'])); ?></p>
+            </div>
+        </div>
+        <!-- Right: Order History -->
+        <div class="lg:col-span-3 bg-white rounded-2xl shadow-xl p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Đơn hàng gần đây</h3>
+            <?php if ($orders->num_rows > 0): ?>
+                <div class="space-y-3">
+                    <?php while ($order = $orders->fetch_assoc()): ?>
+                        <div class="flex justify-between items-center p-3 rounded-lg hover:bg-gray-50 transition">
+                            <div>
+                                <div class="font-bold text-gray-700">Đơn #<?php echo htmlspecialchars($order['order_id']); ?></div>
+                                <div class="text-xs text-gray-500"><?php echo date("d/m/Y H:i", strtotime($order['order_date'])); ?></div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-bold text-orange-600"><?php echo number_format($order['total'], 0, ',', '.'); ?>đ</div>
+                                <span class="text-xs <?php echo getStatusClass($order['status']); ?> px-2 py-0.5 rounded-full font-semibold"><?php echo htmlspecialchars(ucfirst($order['status'])); ?></span>
+                            </div>
+                        </div>
+                    <?php endwhile; ?>
+                </div>
+            <?php else: ?>
+                <p class="text-gray-500 mt-4 text-center">Chưa có đơn hàng nào.</p>
+            <?php endif; ?>
+        </div>
+    </div>
 </div>

@@ -1,5 +1,6 @@
 <?php
 include_once '../../database/db_connection.php';
+include_once '../../config.php';
 
 // Create logs directory if not exists
 $logDir = '../../logs/';
@@ -51,14 +52,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $product) {
                         file_put_contents('../../logs/crud_errors.log', $logMessage, FILE_APPEND | LOCK_EX);
                     }
                 }
-                $upload_dir = '../../Photos/';
+                // Use the directory of the old image, or default to a new directory based on category if no old image
+                $upload_dir_relative = $product['image'] ? dirname($product['image']) : 'Photos/menus/' . strtolower(preg_replace('/[^a-zA-Z0-9-]/', '', str_replace(' ', '-', $product['category_name'])));
+                $upload_dir = '../../' . $upload_dir_relative . '/';
+
                 if (!file_exists($upload_dir)) {
                     mkdir($upload_dir, 0777, true);
                 }
+
                 $file_name = 'product_' . time() . '.' . $file_extension;
                 $target_file = $upload_dir . $file_name;
                 if (move_uploaded_file($_FILES['image']['tmp_name'], $target_file)) {
-                    $image_path = 'Photos/' . $file_name;
+                    $image_path = $upload_dir_relative . '/' . $file_name;
                 } else {
                     // Log upload error
                     $logMessage = date('Y-m-d H:i:s') . ' Image upload error: ' . $_FILES['image']['error'] . ' for product_id: ' . $product['product_id'] . PHP_EOL;
@@ -135,12 +140,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $product) {
       </select>
     </div>
     <div>
-      <label class="block text-sm font-semibold text-gray-700 mb-1">Hình ảnh sản phẩm</label>
-      <input type="file" name="image" accept="image/*" class="border rounded px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-200" />
-      <?php if ($product['image']): ?>
-        <img src="../../<?= htmlspecialchars($product['image']) ?>" class="h-16 w-16 object-cover rounded shadow mt-2" alt="Current image" />
-        <p class="text-sm text-gray-500 mt-1">Hình ảnh hiện tại. Tải lên hình mới để thay thế.</p>
-      <?php endif; ?>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Hình ảnh sản phẩm</label>
+        <div class="flex items-center gap-6">
+            <?php if ($product['image']): ?>
+                <div class="flex-shrink-0">
+                    <img src="<?php echo $base_url . '/' . htmlspecialchars($product['image']); ?>" class="h-24 w-24 object-cover rounded-xl shadow border" alt="Current image" />
+                    <p class="text-xs text-gray-500 mt-1 text-center">Ảnh hiện tại</p>
+                </div>
+            <?php endif; ?>
+            <input type="file" name="image" accept="image/*" class="border rounded px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-pink-300" />
+        </div>
     </div>
     <div>
       <label class="flex items-center">
@@ -148,8 +157,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $product) {
         <span class="text-sm font-semibold text-gray-700">Sản phẩm signature</span>
       </label>
     </div>
-    <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-xl font-bold shadow transition w-fit flex items-center gap-2"><i class="fa fa-save"></i> Lưu thay đổi</button>
-    <a href="#" data-page="products/list.php" class="text-pink-600 hover:underline font-semibold">Quay lại danh sách</a>
+    <div class="flex items-center justify-center gap-4 mt-4">
+        <button type="submit" class="bg-pink-600 hover:bg-pink-700 text-white px-8 py-3 rounded-xl font-bold shadow transition w-fit flex items-center gap-2"><i class="fa fa-save"></i> Lưu thay đổi</button>
+        <a href="#" data-page="products/list.php" class="text-gray-600 hover:text-pink-600 font-semibold">Quay lại danh sách</a>
+    </div>
   </form>
   <?php else: ?>
     <p class="text-red-500">Sản phẩm không tồn tại.</p>

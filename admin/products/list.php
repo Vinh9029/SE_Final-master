@@ -35,7 +35,7 @@ $result = $conn->query($sql);
 <div class="p-6">
   <div class="flex justify-between items-center mb-8">
     <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2"><i class="fa fa-coffee text-pink-500"></i> Danh sách sản phẩm</h1>
-    <a href="#" data-page="products/add.php" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-xl font-bold shadow transition flex items-center gap-2"><i class="fa fa-plus"></i> Thêm sản phẩm</a>
+    <a href="#" data-page="products/add.php" class="bg-pink-600 hover:bg-pink-700 text-white px-6 py-2 rounded-xl font-bold shadow transition flex items-center gap-2"><i class="fa fa-plus"></i> Thêm sản phẩm</a>
   </div>
     <div class="bg-white rounded-xl shadow p-8">
       <h2 class="text-2xl font-bold mb-6 text-orange-600 flex items-center gap-2"><i class="fa fa-coffee"></i> Danh sách sản phẩm</h2>
@@ -141,36 +141,29 @@ $result = $conn->query($sql);
   const searchInput = document.getElementById('searchInput');
   const clearSearch = document.getElementById('clearSearch');
   const currentCat = '<?= htmlspecialchars($cat) ?>';
+  const catSelect = document.querySelector('select[name="cat"]');
   let searchTimeout;
-  searchInput.addEventListener('input', function() {
+
+  function performSearch() {
     clearTimeout(searchTimeout);
-    const term = this.value.trim();
     searchTimeout = setTimeout(() => {
-      if (term.length > 0) {
-        const params = new URLSearchParams();
-        params.append('search', term);
-        if (currentCat) params.append('cat', currentCat);
-        params.append('page', '1');
-        window.location.href = '?' + params.toString();
-      }
+      const term = searchInput.value.trim();
+      const category = catSelect.value;
+      const url = `products/list.php?page=1&search=${encodeURIComponent(term)}&cat=${encodeURIComponent(category)}`;
+      window.parent.loadPage(url);
     }, 500);
-  });
+  }
+
+  searchInput.addEventListener('input', performSearch);
+  catSelect.addEventListener('change', performSearch);
+
   clearSearch.addEventListener('click', () => {
     searchInput.value = '';
-    const params = new URLSearchParams();
-    if (currentCat) params.append('cat', currentCat);
-    params.append('page', '1');
-    window.location.href = '?' + params.toString();
+    catSelect.value = '';
+    const url = 'products/list.php?page=1';
+    window.parent.loadPage(url);
   });
 
-  // Category filter form submit (already handled by form, but for consistency)
-  const catSelect = document.querySelector('select[name="cat"]');
-  if (catSelect) {
-    catSelect.addEventListener('change', function() {
-      const form = this.closest('form');
-      form.submit();
-    });
-  }
 
   // AJAX navigation for CRUD links and pagination
   function bindAjaxLinks() {

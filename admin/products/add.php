@@ -122,7 +122,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <span class="text-sm font-semibold text-gray-700">Sản phẩm signature</span>
       </label>
     </div>
-    <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-xl font-bold shadow transition w-fit flex items-center gap-2"><i class="fa fa-save"></i> Lưu sản phẩm</button>
-    <a href="#" data-page="products/list.php" class="text-pink-600 hover:underline font-semibold">Quay lại danh sách</a>
+    <div class="flex items-center justify-center gap-4 mt-4">
+        <button type="submit" class="bg-pink-600 hover:bg-pink-700 text-white px-8 py-3 rounded-xl font-bold shadow transition w-fit flex items-center gap-2"><i class="fa fa-save"></i> Lưu sản phẩm</button>
+        <a href="#" data-page="products/list.php" class="text-gray-600 hover:text-pink-600 font-semibold">Quay lại danh sách</a>
+    </div>
   </form>
 </div>

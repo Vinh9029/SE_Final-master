@@ -81,14 +81,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if ($product) {
             ?>
-            <div class="max-w-md mx-auto py-10">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Xác nhận xóa</h2>
-                <p class="text-gray-600 mb-6">Bạn có chắc chắn muốn xóa sản phẩm "<strong><?= htmlspecialchars($product['name']) ?></strong>"?</p>
-                <form method="post" class="space-y-4">
+            <div class="max-w-lg mx-auto py-10 flex items-center justify-center h-full">
+                <div class="bg-white rounded-2xl shadow-2xl p-8 text-center">
+                    <div class="text-red-500 mb-4"><i class="fas fa-exclamation-triangle fa-3x"></i></div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Xác nhận xóa</h2>
+                    <p class="text-gray-600 mb-6">Bạn có chắc chắn muốn xóa vĩnh viễn sản phẩm <br>"<strong class="text-red-600"><?= htmlspecialchars($product['name']) ?></strong>"?<br>Hành động này không thể hoàn tác.</p>
+                    <form method="post" class="flex justify-center gap-4">
                     <input type="hidden" name="product_id" value="<?= $product_id ?>">
-                    <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold">Xóa</button>
-                    <a href="#" data-page="products/list.php" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-lg font-semibold">Hủy</a>
-                </form>
+                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-8 py-2 rounded-lg font-semibold shadow-md transition">Xác nhận Xóa</button>
+                        <a href="#" data-page="products/list.php" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 py-2 rounded-lg font-semibold shadow-md transition">Hủy</a>
+                    </form>
+                </div>
             </div>
             <?php
         } else {

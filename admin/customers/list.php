@@ -32,10 +32,33 @@ $result = $conn->query($sql);
           <td class="px-4 py-2"><?= htmlspecialchars($row['phone']) ?></td>
           <td class="px-4 py-2"><?= htmlspecialchars($row['address']) ?></td>
           <td class="px-4 py-2"><?= $row['created_at'] ?></td>
-          <td class="px-4 py-2"><a href="customers/detail.php?id=<?= $row['user_id'] ?>" class="text-blue-500 hover:underline">Xem</a></td>
+          <td class="px-4 py-2"><a href="#" data-page="customers/detail.php?id=<?= $row['user_id'] ?>" class="text-blue-500 hover:underline">Xem</a></td>
         </tr>
         <?php endwhile; ?>
       </tbody>
     </table>
   </div>
 </div>
+<script>
+  // Bind AJAX navigation for detail links
+  function bindCustomerLinks() {
+    document.querySelectorAll('a[data-page]').forEach(link => {
+      link.onclick = function(e) {
+        e.preventDefault();
+        const page = this.getAttribute('data-page');
+        if (page && window.parent && window.parent.loadPage) {
+          window.parent.loadPage(page);
+        }
+      };
+    });
+  }
+
+  // Ensure the function is called after the content is loaded.
+  // If this page is loaded via AJAX, the parent's script will handle it.
+  // If loaded directly, this will bind the links.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindCustomerLinks);
+  } else {
+    bindCustomerLinks();
+  }
+</script>
