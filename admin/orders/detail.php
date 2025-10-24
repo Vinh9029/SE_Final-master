@@ -13,19 +13,25 @@ if (!$order_id) {
 }
 
 // Handle status update
-$message = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status']) && isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+    header('Content-Type: application/json');
     $new_status = $_POST['status'] ?? '';
+    $response = ['success' => false, 'message' => 'Trạng thái không hợp lệ.'];
+
     if (in_array($new_status, ['pending', 'processing', 'completed', 'cancelled'])) {
         $stmt = $conn->prepare("UPDATE orders SET status = ? WHERE order_id = ?");
         $stmt->bind_param("si", $new_status, $order_id);
         if ($stmt->execute()) {
-            $message = 'Cập nhật trạng thái thành công!';
+            $response = ['success' => true, 'message' => 'Cập nhật trạng thái thành công!', 'redirect' => 'orders/detail.php?id=' . $order_id];
         } else {
-            $message = 'Có lỗi xảy ra.';
+            $response['message'] = 'Có lỗi xảy ra khi cập nhật.';
         }
         $stmt->close();
     }
+    echo json_encode($response);
+    exit;
+} else {
+    $message = ''; // Để xử lý cho trường hợp không phải AJAX (nếu cần)
 }
 
 // Fetch order details
@@ -61,11 +67,6 @@ function get_status_label($status) {
 <div class="max-w-2xl mx-auto py-8">
   <div class="bg-white rounded-2xl shadow-xl p-8">
     <h1 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2"><i class="fa fa-eye text-yellow-500"></i> Chi tiết đơn hàng #<?php echo htmlspecialchars($order['order_id']); ?></h1>
-    <?php if ($message): ?>
-      <div class="mb-4 p-4 rounded-xl bg-green-100 text-green-800">
-        <?php echo htmlspecialchars($message); ?>
-      </div>
-    <?php endif; ?>
     <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-2">
       <div class="font-semibold text-gray-700">Khách hàng: <span class="text-pink-600"><?php echo htmlspecialchars($order['full_name']); ?></span></div>
       <div class="font-semibold text-gray-700">Email: <span class="text-pink-600"><?php echo htmlspecialchars($order['email']); ?></span></div>
@@ -77,7 +78,7 @@ function get_status_label($status) {
         <span class="<?php echo $status_class; ?> px-2 py-1 rounded-full font-bold"><?php echo $status_text; ?></span>
       </div>
     </div>
-    <form method="post" class="mb-6">
+    <form method="post" action="orders/detail.php?id=<?php echo $order_id; ?>" class="mb-6">
       <label class="block text-sm font-semibold text-gray-700 mb-1">Cập nhật trạng thái</label>
       <select name="status" class="border rounded px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-200">
         <option value="pending" <?php echo $order['status'] === 'pending' ? 'selected' : ''; ?>>Chờ xử lý</option>

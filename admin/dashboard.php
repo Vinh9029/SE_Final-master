@@ -77,12 +77,12 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
           <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fa fa-chart-line text-pink-500"></i> Thống kê nhanh</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <div class="font-semibold text-gray-600 mb-2">Đơn hàng theo ngày</div>
-              <div class="h-32 bg-gradient-to-r from-pink-100 to-orange-100 rounded-xl flex items-center justify-center text-gray-400">[Biểu đồ]</div>
+              <div class="font-semibold text-gray-600 mb-2">Tổng đơn hàng hôm nay</div>
+              <canvas id="dailyOrdersChart" height="150"></canvas>
             </div>
             <div>
-              <div class="font-semibold text-gray-600 mb-2">Doanh thu theo ngày</div>
-              <div class="h-32 bg-gradient-to-r from-green-100 to-yellow-100 rounded-xl flex items-center justify-center text-gray-400">[Biểu đồ]</div>
+              <div class="font-semibold text-gray-600 mb-2">Tổng doanh thu hôm nay</div>
+              <canvas id="dailyRevenueChart" height="150"></canvas>
             </div>
           </div>
         </div>
@@ -238,7 +238,6 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
         const newScript = document.createElement('script');
         newScript.textContent = script.textContent;
         // Thay thế thẻ script cũ bằng thẻ mới để đảm bảo nó được thực thi
-        // Nếu script.parentNode là null (ví dụ: script đã bị xóa), thì không làm gì cả
         if (script.parentNode) {
             script.parentNode.replaceChild(newScript, script);
         } else {
@@ -249,6 +248,32 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
     }
     // Gắn sự kiện ban đầu khi DOM đã tải xong
     document.addEventListener('DOMContentLoaded', bindAjaxLinks);
+
+    // Vẽ biểu đồ cho dashboard
+    function drawDashboardCharts() {
+        // Biểu đồ đơn hàng
+        fetch('dashboard/totalOrders.php')
+            .then(res => res.json())
+            .then(chartData => {
+                const ctx = document.getElementById('dailyOrdersChart');
+                if (ctx) {
+                    renderBarChart(ctx.id, chartData.labels, chartData.data, 'Số lượng đơn hàng', { bg: 'rgba(236, 72, 153, 0.6)', border: 'rgba(219, 39, 119, 1)' });
+                }
+            });
+
+        // Biểu đồ doanh thu
+        fetch('dashboard/salesByDay.php')
+            .then(res => res.json())
+            .then(chartData => {
+                const ctx = document.getElementById('dailyRevenueChart');
+                if (ctx) {
+                    renderBarChart(ctx.id, chartData.labels, chartData.data, 'Doanh thu (VNĐ)', { bg: 'rgba(16, 185, 129, 0.6)', border: 'rgba(5, 150, 105, 1)' });
+                }
+            });
+    }
+
+    // Vẽ biểu đồ khi trang tải lần đầu
+    document.addEventListener('DOMContentLoaded', drawDashboardCharts);
   </script>
 </body>
 </html>
