@@ -66,10 +66,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Admin sửa không cần duyệt lại, giữ nguyên status
         $stmt = $conn->prepare("UPDATE blogs SET title = ?, content = ?, cover_image = ?, slug = ? WHERE blog_id = ?");
         $stmt->bind_param("ssssi", $title, $content, $cover_image, $slug, $blog_id);
+        
+        $is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+
         if ($stmt->execute()) {
-            $_SESSION['admin_blog_message'] = "Admin đã cập nhật bài viết thành công!";
-            header('Location: ../dashboard.php?page=blog/list.php');
-            exit();
+            if ($is_ajax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true, 'message' => 'Admin đã cập nhật bài viết thành công!', 'redirect' => 'blog/list.php']);
+                exit();
+            } else {
+                $_SESSION['admin_blog_message'] = "Admin đã cập nhật bài viết thành công!";
+                header('Location: ../dashboard.php?page=blog/list.php');
+                exit();
+            }
         } else {
             $errors[] = "Lỗi khi cập nhật bài viết: " . $stmt->error;
         }
