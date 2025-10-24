@@ -113,20 +113,25 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
         if (this.getAttribute('data-page') === 'dashboard-home') {
           // Luôn fetch lại chính file dashboard.php để lấy lại phần main content động
           mainContent.innerHTML = `<div class='flex flex-col items-center justify-center h-full'><div class='animate-pulse w-24 h-24 bg-pink-100 rounded-full mb-6'></div><div class='text-center text-gray-400 mt-10'><i class='fa fa-spinner fa-spin text-4xl mb-4'></i><div class='font-bold text-lg'>Đang tải...</div></div></div>`;
-          fetch('dashboard.php')
+          fetch('dashboard.php?_ajax=true') // Thêm tham số để PHP có thể xử lý khác nếu cần, mặc dù hiện tại không dùng
             .then(res => res.text())
             .then(html => {
-              // Lấy phần #dashboard-home từ response
-              const tempDiv = document.createElement('div');
-              tempDiv.innerHTML = html;
-              const newHome = tempDiv.querySelector('#dashboard-home');
-              if (newHome) {
-                mainContent.innerHTML = newHome.outerHTML;
-              } else {
-                mainContent.innerHTML = '<div class="text-red-500">Không thể tải dashboard.</div>';
-              }
-              bindAjaxLinks();
-              window.scrollTo({ top: mainContent.offsetTop - 80, behavior: 'smooth' });
+              setTimeout(() => {
+                mainContent.innerHTML = ''; // Xóa nội dung hiện tại
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html; // Parse toàn bộ HTML
+                const newHomeContent = tempDiv.querySelector('#dashboard-home'); // Lấy nội dung của #dashboard-home
+
+                if (newHomeContent) {
+                  mainContent.appendChild(newHomeContent); // Thêm trực tiếp phần tử #dashboard-home vào mainContent
+                  executeInlineScripts(mainContent); // Thực thi script nếu có trong #dashboard-home (không có trong trường hợp này, nhưng tốt cho tính nhất quán)
+                  drawDashboardCharts(); // Gọi hàm vẽ biểu đồ để khởi tạo lại các biểu đồ
+                } else {
+                  mainContent.innerHTML = '<div class="text-red-500">Không thể tải nội dung dashboard.</div>';
+                }
+                bindAjaxLinks(); // Gắn lại các sự kiện AJAX cho các link/form mới
+                window.scrollTo({ top: mainContent.offsetTop - 80, behavior: 'smooth' });
+              }, 400);
             });
         } else {
           mainContent.innerHTML = `<div class='flex flex-col items-center justify-center h-full'><div class='animate-pulse w-24 h-24 bg-pink-100 rounded-full mb-6'></div><div class='text-center text-gray-400 mt-10'><i class='fa fa-spinner fa-spin text-4xl mb-4'></i><div class='font-bold text-lg'>Đang tải...</div></div></div>`;
