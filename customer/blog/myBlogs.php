@@ -96,8 +96,12 @@ $status_map = [
                                 <?php if ($blog['status'] == 'approved') : ?>
                                     <a href="<?php echo $base_url; ?>/pages/blogs/detail.php?slug=<?php echo $blog['slug']; ?>" class="text-blue-600 hover:text-blue-900 mr-3" title="Xem"><i class="fas fa-eye"></i></a>
                                 <?php endif; ?>
-                                <a href="edit.php?id=<?php echo $blog['blog_id']; ?>" class="text-yellow-600 hover:text-yellow-900 mr-3" title="Sửa"><i class="fas fa-edit"></i></a>
-                                <a href="delete.php?id=<?php echo $blog['blog_id']; ?>" class="text-red-600 hover:text-red-900" onclick="return confirm('Bạn có chắc chắn muốn xóa bài viết này?');" title="Xóa"><i class="fas fa-trash"></i></a>
+                                <a href="edit.php?id=<?php echo $blog['blog_id']; ?>" class="text-yellow-600 hover:text-yellow-900 mr-3" title="Sửa">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button data-blog-id="<?php echo $blog['blog_id']; ?>" data-blog-title="<?php echo htmlspecialchars($blog['title']); ?>" class="delete-btn text-red-600 hover:text-red-900" title="Xóa">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -106,6 +110,66 @@ $status_map = [
         </table>
     </div>
 </main>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 text-center max-w-md w-full transform transition-all">
+        <div class="text-red-500 mb-4">
+            <i class="fas fa-exclamation-triangle fa-4x"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-800 mb-2">Xác nhận xóa bài viết</h1>
+        <p class="text-gray-600 mb-6">
+            Bạn có chắc chắn muốn xóa vĩnh viễn bài viết:
+            <br>
+            <strong id="blogTitleToDelete" class="text-red-600"></strong>?
+            <br>
+            Hành động này không thể hoàn tác.
+        </p>
+        <form id="deleteForm" class="flex justify-center gap-4">
+            <input type="hidden" name="blog_id" id="blogIdToDelete">
+            <button type="button" id="cancelDelete" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 py-2 rounded-lg font-semibold shadow-md transition">
+                Hủy
+            </button>
+            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-8 py-2 rounded-lg font-semibold shadow-md transition">
+                Xác nhận Xóa
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const deleteModal = document.getElementById('deleteModal');
+    const cancelDeleteBtn = document.getElementById('cancelDelete');
+    const deleteForm = document.getElementById('deleteForm');
+    const blogTitleEl = document.getElementById('blogTitleToDelete');
+    const blogIdInput = document.getElementById('blogIdToDelete');
+
+    document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const blogId = this.dataset.blogId;
+            const blogTitle = this.dataset.blogTitle;
+
+            blogTitleEl.textContent = `"${blogTitle}"`;
+            blogIdInput.value = blogId;
+            deleteModal.classList.remove('hidden');
+        });
+    });
+
+    cancelDeleteBtn.addEventListener('click', () => {
+        deleteModal.classList.add('hidden');
+    });
+
+    deleteForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const blogId = blogIdInput.value;
+        // Thay vì submit form, chúng ta sẽ dùng fetch để gửi yêu cầu
+        // và xử lý kết quả mà không cần tải lại trang.
+        // Tuy nhiên, để đơn giản và giữ logic hiện tại, ta sẽ submit form đến delete.php
+        window.location.href = `delete.php?id=${blogId}&confirm=true`;
+    });
+});
+</script>
 
 </body>
 </html>
