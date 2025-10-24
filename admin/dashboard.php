@@ -16,6 +16,8 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
   <title>Admin Dashboard | Old Favour Coffee</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="../assets/js/chart.js"></script>
 </head>
 <body class="bg-gradient-to-br from-gray-50 via-yellow-50 to-white min-h-screen">
   <div class="flex min-h-screen">
@@ -152,7 +154,16 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
             fetch(page)
               .then(res => res.text())
               .then(html => {
-                setTimeout(() => { mainContent.innerHTML = html; bindAjaxLinks(); }, 400);
+                setTimeout(() => {
+                  mainContent.innerHTML = '';
+                  const tempDiv = document.createElement('div');
+                  tempDiv.innerHTML = html;
+                  while (tempDiv.firstChild) {
+                    mainContent.appendChild(tempDiv.firstChild);
+                  }
+                  executeInlineScripts(mainContent);
+                  bindAjaxLinks();
+                }, 400);
                 window.scrollTo({ top: mainContent.offsetTop - 80, behavior: 'smooth' });
               });
           }
@@ -164,36 +175,79 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
       forms.forEach(form => {
         form.addEventListener('submit', function(e) {
           e.preventDefault();
-          const formData = new FormData(this);
-          fetch(this.action, {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-          })
-          .then(res => res.json())
-          .then(data => {
-            if (data.success) {
-              showToast(data.message, 'success');
-              if (data.redirect) {
-                fetch(data.redirect)
+          const form = this;
+          const method = form.method.toLowerCase();
+
+          // Xử lý cho form Lọc (GET) của trang sales.php
+          if (method === 'get' && form.querySelector('button[type="submit"]').innerText === 'Lọc') {
+              const formData = new FormData(form);
+              const params = new URLSearchParams(formData);
+              // Lấy data-page từ link sidebar đang active để biết trang cần tải lại
+              const activeLink = document.querySelector('aside nav a.bg-pink-200');
+              const pageUrl = activeLink ? activeLink.getAttribute('data-page') : 'reports/sales.php'; // Mặc định là sales.php nếu không tìm thấy
+              const fullUrl = `${pageUrl}?${params.toString()}`;
+
+              mainContent.innerHTML = `<div class='flex flex-col items-center justify-center h-full'><div class='animate-pulse w-24 h-24 bg-pink-100 rounded-full mb-6'></div><div class='text-center text-gray-400 mt-10'><i class='fa fa-spinner fa-spin text-4xl mb-4'></i><div class='font-bold text-lg'>Đang lọc...</div></div></div>`;
+              fetch(fullUrl)
                   .then(res => res.text())
                   .then(html => {
-                    mainContent.innerHTML = html;
-                    bindAjaxLinks();
+                      setTimeout(() => {
+                        mainContent.innerHTML = '';
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = html;
+                        while (tempDiv.firstChild) { mainContent.appendChild(tempDiv.firstChild); }
+                        executeInlineScripts(mainContent);
+                        bindAjaxLinks(); }, 400);
                   });
+          } else {
+              // Logic xử lý form POST (CRUD) cũ
+              const formData = new FormData(form);
+              fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+              })
+              .then(res => res.json())
+              .then(data => {
+                if (data.success) {
+                  showToast(data.message, 'success');
+                  if (data.redirect) {
+                    fetch(data.redirect)
+                      .then(res => res.text())
+                      .then(html => {
+                        mainContent.innerHTML = html;
+                        bindAjaxLinks();
+                      });
+                  }
+                } else {
+                  showToast(data.message, 'error');
+                }
+              })
+              .catch(err => {
+                console.error('AJAX error:', err);
+                showToast('Lỗi kết nối. Vui lòng thử lại.', 'error');
+              });
               }
-            } else {
-              showToast(data.message, 'error');
-            }
-          })
-          .catch(err => {
-            console.error('AJAX error:', err);
-            showToast('Lỗi kết nối. Vui lòng thử lại.', 'error');
-          });
         });
       });
     }
-    // Nếu load trực tiếp, cũng bind luôn cho các link CRUD và forms
+    // Hàm tìm và thực thi các script nội tuyến trong một phần tử
+    function executeInlineScripts(element) {
+      const scripts = element.querySelectorAll('script:not([src])'); // Chỉ chọn các script nội tuyến
+      scripts.forEach(script => {
+        const newScript = document.createElement('script');
+        newScript.textContent = script.textContent;
+        // Thay thế thẻ script cũ bằng thẻ mới để đảm bảo nó được thực thi
+        // Nếu script.parentNode là null (ví dụ: script đã bị xóa), thì không làm gì cả
+        if (script.parentNode) {
+            script.parentNode.replaceChild(newScript, script);
+        } else {
+            // Nếu không có parentNode, thêm vào cuối element
+            element.appendChild(newScript);
+        }
+      });
+    }
+    // Gắn sự kiện ban đầu khi DOM đã tải xong
     document.addEventListener('DOMContentLoaded', bindAjaxLinks);
   </script>
 </body>

@@ -85,9 +85,6 @@ for ($i = 0; $i < count($sales); $i++) {
     </table>
   </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="<?php echo $base_url; ?>/assets/js/chart.js"></script>
 <script>
       renderLineChart(
         'salesChart',

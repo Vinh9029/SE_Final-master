@@ -1,4 +1,4 @@
-USE theoldfavour;
+USE theoldflavour;
 
 -- Users (customers)
 INSERT INTO users (username, password, email, full_name, phone, address, role) VALUES
