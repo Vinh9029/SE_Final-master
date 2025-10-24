@@ -9,6 +9,10 @@ $result = $conn->query($sql);
 if ($result) {
     $blogs = $result->fetch_all(MYSQLI_ASSOC);
 }
+
+// Tách bài viết đầu tiên làm bài nổi bật
+$featured_blog = array_shift($blogs);
+
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -70,41 +74,78 @@ if ($result) {
 
 
         <!-- Danh sách bài blog -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            <?php if (empty($blogs)) : ?>
-                <p class="col-span-full text-center text-gray-500 text-xl">Chưa có bài viết nào được đăng.</p>
+        <div>
+            <?php if (!$featured_blog) : ?>
+                <p class="text-center text-gray-500 text-xl">Chưa có bài viết nào được đăng.</p>
             <?php else : ?>
-                <?php foreach ($blogs as $blog) : ?>
-                    <div class="blog-card bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
-                        <a href="detail.php?slug=<?php echo htmlspecialchars($blog['slug']); ?>">
-                            <img src="<?php echo $base_url . '/' . htmlspecialchars($blog['cover_image'] ?: 'Photos/placeholder.jpg'); ?>" alt="<?php echo htmlspecialchars($blog['title']); ?>" class="w-full h-56 object-cover">
-                        </a>
-                        <div class="p-6 flex-grow flex flex-col">
-                            <h2 class="text-2xl font-bold mb-2">
-                                <a href="detail.php?slug=<?php echo htmlspecialchars($blog['slug']); ?>" class="hover:text-yellow-900 transition-colors">
-                                    <?php echo htmlspecialchars($blog['title']); ?>
+                <!-- Featured Blog Post -->
+                <div class="mb-16 blog-card bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2">
+                        <div class="p-8 flex flex-col justify-center">
+                            <span class="text-sm font-semibold text-yellow-800 mb-2">BÀI VIẾT MỚI NHẤT</span>
+                            <h2 class="text-4xl font-bold mb-4">
+                                <a href="detail.php?slug=<?php echo htmlspecialchars($featured_blog['slug']); ?>" class="hover:text-yellow-900 transition-colors">
+                                    <?php echo htmlspecialchars($featured_blog['title']); ?>
                                 </a>
                             </h2>
                             <div class="text-sm text-gray-500 mb-4">
-                                <span>Viết bởi <strong><?php echo htmlspecialchars($blog['full_name']); ?></strong></span>
+                                <span>Viết bởi <strong><?php echo htmlspecialchars($featured_blog['full_name']); ?></strong></span>
                                 <span class="mx-2">•</span>
-                                <span><?php echo date('d/m/Y', strtotime($blog['created_at'])); ?></span>
+                                <span><?php echo date('d/m/Y', strtotime($featured_blog['created_at'])); ?></span>
                             </div>
-                            <div class="text-gray-700 mb-4 flex-grow">
+                            <p class="text-gray-700 mb-6 flex-grow">
                                 <?php
-                                // Rút gọn nội dung
-                                $stripped_content = strip_tags($blog['content']);
-                                echo mb_substr($stripped_content, 0, 120) . (mb_strlen($stripped_content) > 120 ? '...' : '');
+                                $stripped_content = strip_tags($featured_blog['content']);
+                                echo mb_substr($stripped_content, 0, 200) . (mb_strlen($stripped_content) > 200 ? '...' : '');
                                 ?>
-                            </div>
-                            <div class="mt-auto">
-                                <a href="detail.php?slug=<?php echo htmlspecialchars($blog['slug']); ?>" class="font-semibold text-yellow-800 hover:text-yellow-900 transition-colors">
+                            </p>
+                            <div>
+                                <a href="detail.php?slug=<?php echo htmlspecialchars($featured_blog['slug']); ?>" class="font-bold text-yellow-800 hover:text-yellow-900 transition-colors group">
                                     Đọc tiếp <i class="fas fa-arrow-right ml-1"></i>
-                                a>
+                                </a>
                             </div>
                         </div>
+                        <a href="detail.php?slug=<?php echo htmlspecialchars($featured_blog['slug']); ?>" class="block">
+                            <img src="<?php echo $base_url . '/' . htmlspecialchars($featured_blog['cover_image'] ?: 'Photos/placeholder.jpg'); ?>" alt="<?php echo htmlspecialchars($featured_blog['title']); ?>" class="w-full h-full object-cover">
+                        </a>
                     </div>
-                <?php endforeach; ?>
+                </div>
+
+                <!-- Other Blog Posts -->
+                <?php if (!empty($blogs)) : ?>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <?php foreach ($blogs as $blog) : ?>
+                            <div class="blog-card bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
+                                <a href="detail.php?slug=<?php echo htmlspecialchars($blog['slug']); ?>">
+                                    <img src="<?php echo $base_url . '/' . htmlspecialchars($blog['cover_image'] ?: 'Photos/placeholder.jpg'); ?>" alt="<?php echo htmlspecialchars($blog['title']); ?>" class="w-full h-56 object-cover">
+                                </a>
+                                <div class="p-6 flex-grow flex flex-col">
+                                    <h2 class="text-2xl font-bold mb-2">
+                                        <a href="detail.php?slug=<?php echo htmlspecialchars($blog['slug']); ?>" class="hover:text-yellow-900 transition-colors">
+                                            <?php echo htmlspecialchars($blog['title']); ?>
+                                        </a>
+                                    </h2>
+                                    <div class="text-sm text-gray-500 mb-4">
+                                        <span>Viết bởi <strong><?php echo htmlspecialchars($blog['full_name']); ?></strong></span>
+                                        <span class="mx-2">•</span>
+                                        <span><?php echo date('d/m/Y', strtotime($blog['created_at'])); ?></span>
+                                    </div>
+                                    <div class="text-gray-700 mb-4 flex-grow">
+                                        <?php
+                                        $stripped_content = strip_tags($blog['content']);
+                                        echo mb_substr($stripped_content, 0, 120) . (mb_strlen($stripped_content) > 120 ? '...' : '');
+                                        ?>
+                                    </div>
+                                    <div class="mt-auto">
+                                        <a href="detail.php?slug=<?php echo htmlspecialchars($blog['slug']); ?>" class="font-semibold text-yellow-800 hover:text-yellow-900 transition-colors group">
+                                            Đọc tiếp <i class="fas fa-arrow-right ml-1 group-hover:translate-x-1 transition-transform"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
 

@@ -43,6 +43,11 @@ $status_map = [
 <main class="container mx-auto px-4 py-12">
     <div class="flex justify-between items-center mb-8">
         <h1 class="text-4xl font-bold text-yellow-800">Bài viết của tôi</h1>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
         <a href="create.php" class="bg-yellow-800 text-white font-bold py-2 px-4 rounded-lg shadow-lg hover:bg-yellow-900 transition-colors">
             <i class="fas fa-plus mr-2"></i>Viết bài mới
         </a>
