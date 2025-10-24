@@ -75,8 +75,14 @@ function get_blog_status_label($status) {
         </a>
         <div>
             <?php if ($blog['status'] === 'pending') : ?>
-                <a href="blog/approve.php?id=<?php echo $blog['blog_id']; ?>" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition">Duyệt bài</a>
-                <a href="blog/reject.php?id=<?php echo $blog['blog_id']; ?>" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition ml-2">Từ chối</a>
+                <form action="blog/approve.php" method="POST" class="inline-block">
+                    <input type="hidden" name="id" value="<?php echo $blog['blog_id']; ?>">
+                    <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition">Duyệt bài</button>
+                </form>
+                <form action="blog/reject.php" method="POST" class="inline-block">
+                    <input type="hidden" name="id" value="<?php echo $blog['blog_id']; ?>">
+                    <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition ml-2">Từ chối</button>
+                </form>
             <?php endif; ?>
         </div>
     </div>
