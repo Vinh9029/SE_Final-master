@@ -114,35 +114,35 @@ if (isset($_SESSION['user_id'])) {
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Comments Section -->
-    <div class="mt-12 bg-white rounded-2xl shadow-xl p-8">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Bình luận về sản phẩm</h2>
+        <!-- Comments Section -->
+        <div class="mt-12 bg-white rounded-2xl shadow-xl p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Bình luận về sản phẩm</h2>
 
-        <!-- Comment Form -->
-        <?php if (isset($_SESSION['user_id'])) : ?>
-            <form id="comment-form" class="mb-8">
-                <input type="hidden" name="target_id" value="<?php echo $product['product_id']; ?>">
-                <input type="hidden" name="target_type" value="product">
-                <div>
-                    <textarea name="content" id="comment-content" rows="4" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500" placeholder="Chia sẻ cảm nhận của bạn về sản phẩm này..."></textarea>
+            <!-- Comment Form -->
+            <?php if (isset($_SESSION['user_id'])) : ?>
+                <form id="comment-form" class="mb-8">
+                    <input type="hidden" name="target_id" value="<?php echo $product['product_id']; ?>">
+                    <input type="hidden" name="target_type" value="product">
+                    <div>
+                        <textarea name="content" id="comment-content" rows="4" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500" placeholder="Chia sẻ cảm nhận của bạn về sản phẩm này..."></textarea>
+                    </div>
+                    <div class="mt-4 text-right">
+                        <button type="submit" class="btn-orange text-white font-bold py-2 px-6 rounded-lg hover:bg-orange-600 transition">Gửi bình luận</button>
+                    </div>
+                </form>
+            <?php else : ?>
+                <div class="text-center p-4 border-2 border-dashed rounded-lg bg-gray-50">
+                    <p class="text-gray-600">Vui lòng <a href="<?php echo $base_url; ?>/login" class="font-bold text-pink-500 hover:underline">đăng nhập</a> để để lại bình luận của bạn.</p>
                 </div>
-                <div class="mt-4 text-right">
-                    <button type="submit" class="btn-orange text-white font-bold py-2 px-6 rounded-lg hover:bg-orange-600 transition">Gửi bình luận</button>
-                </div>
-            </form>
-        <?php else : ?>
-            <div class="text-center p-4 border-2 border-dashed rounded-lg bg-gray-50">
-                <p class="text-gray-600">Vui lòng <a href="<?php echo $base_url; ?>/login" class="font-bold text-pink-500 hover:underline">đăng nhập</a> để để lại bình luận của bạn.</p>
-            </div>
-        <?php endif; ?>
+            <?php endif; ?>
 
-        <!-- Comments List -->
-        <div id="comments-container" class="space-y-6">
-            <!-- Comments will be loaded here by AJAX -->
-            <div class="text-center text-gray-500">
-                <i class="fa fa-spinner fa-spin"></i> Đang tải bình luận...
+            <!-- Comments List -->
+            <div id="comments-container" class="space-y-6">
+                <!-- Comments will be loaded here by AJAX -->
+                <div class="text-center text-gray-500">
+                    <i class="fa fa-spinner fa-spin"></i> Đang tải bình luận...
+                </div>
             </div>
         </div>
     </div>
