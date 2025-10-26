@@ -1,6 +1,7 @@
 <?php
 session_start();
 include_once __DIR__ . '/../../../database/db_connection.php';
+include_once __DIR__ . '/../../../includes/handlers/notification/createNotification.php';
 header('Content-Type: application/json');
 $user_id = $_SESSION['user_id'] ?? null;
 if (!$user_id) {
@@ -57,6 +58,20 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param('id', $user_id, $total);
 $stmt->execute();
 $order_id = $conn->insert_id;
+
+// Create notification for new order
+if ($order_id) {
+    create_notification(
+        $conn,
+        $user_id,
+        'order_status',
+        "Đơn hàng mới #{$order_id}",
+        'Đơn hàng của bạn đã được tạo thành công và đang chờ xử lý.',
+        $order_id,
+        '/customer/orders.php'
+    );
+}
+
 // Lưu chi tiết đơn hàng
 foreach ($cart_items as $item) {
     $sql = 'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)';

@@ -1,3 +1,4 @@
+
 <?php
 include_once __DIR__ . "/../config.php";
 if (session_status() == PHP_SESSION_NONE) {
@@ -6,15 +7,36 @@ if (session_status() == PHP_SESSION_NONE) {
 
 // Lấy số lượng sản phẩm trong giỏ hàng
 $cart_count = 0;
+$favourite_count = 0;
+$notification_count = 0;
+
 if (isset($_SESSION['user_id'])) {
     include_once __DIR__ . '/../database/db_connection.php';
     $user_id = $_SESSION['user_id'];
+
+    // Cart count
     $sql = "SELECT SUM(quantity) AS total FROM cart_items WHERE user_id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param('i', $user_id);
     $stmt->execute();
     $result = $stmt->get_result()->fetch_assoc();
     $cart_count = $result['total'] ?? 0;
+
+    // Favourite count
+    $fav_sql = "SELECT COUNT(*) AS total FROM favourites WHERE customer_id = ?";
+    $fav_stmt = $conn->prepare($fav_sql);
+    $fav_stmt->bind_param('i', $user_id);
+    $fav_stmt->execute();
+    $fav_result = $fav_stmt->get_result()->fetch_assoc();
+    $favourite_count = $fav_result['total'] ?? 0;
+
+    // Unread notification count
+    $noti_sql = "SELECT COUNT(*) AS total FROM notifications WHERE customer_id = ? AND is_read = 0";
+    $noti_stmt = $conn->prepare($noti_sql);
+    $noti_stmt->bind_param('i', $user_id);
+    $noti_stmt->execute();
+    $noti_result = $noti_stmt->get_result()->fetch_assoc();
+    $notification_count = $noti_result['total'] ?? 0;
 }
 ?>
 
@@ -46,10 +68,72 @@ if (isset($_SESSION['user_id'])) {
                 <span class="absolute left-2 top-1.5 text-gray-400"><i class="fa fa-search"></i></span>
                 <div id="searchDropdown" class="absolute left-0 top-10 w-full bg-white rounded-xl shadow-lg z-50" style="display:none;"></div>
             </form>
-            <script>
-            const searchInput = document.getElementById('searchInput');
-            const searchDropdown = document.getElementById('searchDropdown');
-            let searchTimeout = null;
+            
+            <!-- Cart icon -->
+            <a href="<?php echo $base_url; ?>/customer/cart/index.php" class="relative text-gray-700 hover:text-pink-600 text-xl transition">
+                <i class="fa fa-shopping-cart"></i>
+                <?php if ($cart_count > 0): ?>
+                    <span class="absolute -top-2 -right-2 bg-pink-500 text-white text-xs rounded-full px-1"><?php echo $cart_count; ?></span>
+                <?php endif; ?>
+            </a>
+
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <!-- Favourite icon -->
+                <div class="relative group" id="fav-group">
+                    <a href="<?php echo $base_url; ?>/customer/favourites.php" class="relative text-gray-700 hover:text-pink-600 text-xl transition">
+                        <i class="fa fa-heart"></i>
+                        <?php if ($favourite_count > 0): ?>
+                            <span id="favourite-badge" class="absolute -top-2 -right-2 bg-pink-500 text-white text-xs rounded-full px-1"><?php echo $favourite_count; ?></span>
+                        <?php endif; ?>
+                    </a>
+                    <div id="mini-favourites-dropdown" class="absolute right-0 mt-2 w-80 bg-white border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div class="p-4 text-center text-gray-500">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- Notification icon -->
+                <div class="relative group" id="notif-group">
+                    <a href="<?php echo $base_url; ?>/customer/notifications.php" class="relative text-gray-700 hover:text-pink-600 text-xl transition">
+                        <i class="fa fa-bell"></i>
+                        <?php if ($notification_count > 0): ?>
+                            <span id="notification-badge" class="absolute -top-2 -right-2 bg-pink-500 text-white text-xs rounded-full px-1"><?php echo $notification_count; ?></span>
+                        <?php endif; ?>
+                    </a>
+                    <div id="notifications-dropdown" class="absolute right-0 mt-2 w-80 bg-white border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div class="p-4 text-center text-gray-500">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- User account dropdown -->
+                <div class="relative group">
+                    <a href="<?php echo $base_url; ?>/customer/account.php" class="text-gray-700 hover:text-pink-600 font-medium transition flex items-center gap-1">
+                        <i class="fa fa-user-circle text-lg"></i>
+                        <span>Tài khoản</span>
+                    </a>
+                    <div class="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <a href="<?php echo $base_url; ?>/customer/account.php?page=profile" class="block px-4 py-2 text-gray-700 hover:bg-pink-50">Thông tin tài khoản</a>
+                        <a href="<?php echo $base_url; ?>/customer/account.php?page=orders" class="block px-4 py-2 text-gray-700 hover:bg-pink-50">Đơn hàng</a>
+                        <a href="<?php echo $base_url; ?>/customer/account.php?page=settings" class="block px-4 py-2 text-gray-700 hover:bg-pink-50">Cài đặt tài khoản</a>
+                        <a href="<?php echo $base_url; ?>/customer/logout.php" class="block px-4 py-2 text-gray-700 hover:bg-pink-50">Đăng xuất</a>
+                    </div>
+                </div>
+            <?php else: ?>
+                <!-- Login link -->
+                <a href="<?php echo $base_url; ?>/login/index.php" class="text-gray-700 hover:text-pink-600 font-medium transition flex items-center gap-1">
+                    <i class="fa fa-user-circle text-lg"></i>
+                    <span>Đăng nhập</span>
+                </a>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Search script
+        const searchInput = document.getElementById('searchInput');
+        const searchDropdown = document.getElementById('searchDropdown');
+        let searchTimeout = null;
+        if(searchInput) {
             searchInput.addEventListener('input', function() {
                 const val = this.value.trim();
                 if (val.length === 0) {
@@ -82,40 +166,60 @@ if (isset($_SESSION['user_id'])) {
                         });
                 }, 350);
             });
-            // Ẩn dropdown khi click ra ngoài
             window.addEventListener('click', function(e) {
-                if (!searchDropdown.contains(e.target) && e.target !== searchInput) {
+                if (searchDropdown && !searchDropdown.contains(e.target) && e.target !== searchInput) {
                     searchDropdown.style.display = 'none';
                 }
             });
-            </script>
-            <!-- Cart icon -->
-            <a href="<?php echo $base_url; ?>/customer/cart/index.php" class="relative text-gray-700 hover:text-pink-600 text-xl transition">
-                <i class="fa fa-shopping-cart"></i>
-                <!-- Badge số lượng (nếu có) -->
-                <?php if ($cart_count > 0): ?>
-                    <span class="absolute -top-2 -right-2 bg-pink-500 text-white text-xs rounded-full px-1"><?php echo $cart_count; ?></span>
-                <?php endif; ?>
-            </a>
-            <?php if (isset($_SESSION['user_id'])): ?>
-                <div class="relative group">
-                    <a href="<?php echo $base_url; ?>/customer/account.php" class="text-gray-700 hover:text-pink-600 font-medium transition flex items-center gap-1">
-                        <i class="fa fa-user-circle text-lg"></i>
-                        <span>Tài khoản</span>
-                    </a>
-                    <div class="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50">
-                        <a href="<?php echo $base_url; ?>/customer/account.php?page=profile" class="block px-4 py-2 text-gray-700 hover:bg-pink-50">Thông tin tài khoản</a>
-                        <a href="<?php echo $base_url; ?>/customer/account.php?page=orders" class="block px-4 py-2 text-gray-700 hover:bg-pink-50">Đơn hàng</a>
-                        <a href="<?php echo $base_url; ?>/customer/account.php?page=settings" class="block px-4 py-2 text-gray-700 hover:bg-pink-50">Cài đặt tài khoản</a>
-                        <a href="<?php echo $base_url; ?>/customer/logout.php" class="block px-4 py-2 text-gray-700 hover:bg-pink-50">Đăng xuất</a>
-                    </div>
-                </div>
-            <?php else: ?>
-                <a href="<?php echo $base_url; ?>/login/index.php" class="text-gray-700 hover:text-pink-600 font-medium transition flex items-center gap-1">
-                    <i class="fa fa-user-circle text-lg"></i>
-                    <span>Đăng nhập</span>
-                </a>
-            <?php endif; ?>
-        </div>
-    </div>
+        }
+
+        <?php if (isset($_SESSION['user_id'])): ?>
+        // Favourites and Notifications script
+        const miniFavouritesDropdown = document.getElementById('mini-favourites-dropdown');
+        const notificationsDropdown = document.getElementById('notifications-dropdown');
+        const favGroup = document.getElementById('fav-group');
+        const notifGroup = document.getElementById('notif-group');
+
+        function loadMiniFavourites() {
+            fetch(`<?php echo $base_url; ?>/includes/handlers/favourite/miniFavourites.php`)
+                .then(res => res.text())
+                .then(data => {
+                    if(miniFavouritesDropdown) miniFavouritesDropdown.innerHTML = data;
+                }).catch(err => {
+                    if(miniFavouritesDropdown) miniFavouritesDropdown.innerHTML = '<div class="p-4 text-center text-red-500">Could not load items.</div>';
+                });
+        }
+
+        function loadNotifications() {
+            fetch(`<?php echo $base_url; ?>/includes/handlers/notification/getNotifications.php?mini=true`)
+                .then(res => res.text())
+                .then(data => {
+                    if(notificationsDropdown) notificationsDropdown.innerHTML = data;
+                }).catch(err => {
+                    if(notificationsDropdown) notificationsDropdown.innerHTML = '<div class="p-4 text-center text-red-500">Could not load notifications.</div>';
+                });
+        }
+
+        let favLoaded = false;
+        if(favGroup) {
+            favGroup.addEventListener('mouseenter', () => {
+                if (!favLoaded) {
+                    loadMiniFavourites();
+                    favLoaded = true;
+                }
+            });
+        }
+
+        let notifLoaded = false;
+        if(notifGroup) {
+            notifGroup.addEventListener('mouseenter', () => {
+                if (!notifLoaded) {
+                    loadNotifications();
+                    notifLoaded = true;
+                }
+            });
+        }
+        <?php endif; ?>
+    });
+    </script>
 </header>

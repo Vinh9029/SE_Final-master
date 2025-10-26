@@ -44,6 +44,20 @@ $totalItems = count($allItems);
 $totalPages = ceil($totalItems / $itemsPerPage);
 $offset = ($page - 1) * $itemsPerPage;
 $pagedItems = array_slice($allItems, $offset, $itemsPerPage);
+
+// Get all favourite IDs for the current user
+$favourite_ids = [];
+if (isset($_SESSION['user_id'])) {
+    $fav_sql = "SELECT product_id FROM favourites WHERE customer_id = ?";
+    $fav_stmt = $conn->prepare($fav_sql);
+    $fav_stmt->bind_param('i', $_SESSION['user_id']);
+    $fav_stmt->execute();
+    $fav_result = $fav_stmt->get_result();
+    while ($row = $fav_result->fetch_assoc()) {
+        $favourite_ids[] = $row['product_id'];
+    }
+    $fav_stmt->close();
+}
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -135,7 +149,15 @@ $pagedItems = array_slice($allItems, $offset, $itemsPerPage);
         <!-- Grid sản phẩm -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8">
             <?php foreach ($pagedItems as $item): ?>
-                <div class="bg-white rounded-2xl shadow-xl p-6 flex flex-col items-center hover:scale-105 hover:shadow-pink-300 transition duration-200">
+                <div class="relative bg-white rounded-2xl shadow-xl p-6 flex flex-col items-center hover:scale-105 hover:shadow-pink-300 transition duration-200 group">
+                    <?php if (isset($_SESSION['user_id'])):
+                        $is_favourited = in_array($item['product_id'], $favourite_ids);
+                    ?>
+                        <button class="favourite-btn absolute top-3 right-3 text-xl <?php echo $is_favourited ? 'text-pink-500' : 'text-gray-300'; ?> hover:text-pink-400 transition" data-product-id="<?php echo $item['product_id']; ?>">
+                            <i class="fa <?php echo $is_favourited ? 'fa-solid' : 'fa-regular'; ?> fa-heart"></i>
+                        </button>
+                    <?php endif; ?>
+
                     <a href="product.php?slug=<?php echo generateSlug($item['name']); ?>">
                         <img src="<?php echo $base_url . '/' . ($item['image'] ?: 'Photos/placeholder.png'); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="w-32 h-32 object-cover rounded-xl mb-4 shadow bg-gray-100 border-2 border-pink-100" />
                     </a>
@@ -158,24 +180,55 @@ $pagedItems = array_slice($allItems, $offset, $itemsPerPage);
         <?php endif; ?>
     </div>
     <br><br>
-    <!-- Khuyến mãi & Ưu đãi dưới cùng menu -->
- 
+    
+    <?php include_once __DIR__ . '/../includes/footer.php'; ?>
+
     <script>
-        if (window.location.pathname.endsWith('menus.php')) {
-            document.addEventListener('DOMContentLoaded', function() {
-                var promoLink = document.querySelector('a[href="#promotion"]');
-                if (promoLink) {
-                    promoLink.addEventListener('click', function(e) {
-                        var target = document.getElementById('promotion');
-                        if (target) {
-                            e.preventDefault();
-                            target.scrollIntoView({ behavior: 'smooth' });
-                        }
-                    });
+    // Favourite button handler
+    document.querySelectorAll('.favourite-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent link navigation if button is inside an <a> tag
+            
+            const productId = this.dataset.productId;
+            const icon = this.querySelector('i');
+            const isFavourited = icon.classList.contains('fa-solid');
+
+            const url = isFavourited 
+                ? '<?php echo $base_url; ?>/includes/handlers/favourite/removeFavourite.php'
+                : '<?php echo $base_url; ?>/includes/handlers/favourite/addFavourite.php';
+
+            const formData = new FormData();
+            formData.append('product_id', productId);
+
+            fetch(url, {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if (isFavourited) {
+                        icon.classList.remove('fa-solid', 'text-pink-500');
+                        icon.classList.add('fa-regular', 'text-gray-300');
+                    } else {
+                        icon.classList.add('fa-solid', 'text-pink-500');
+                        icon.classList.remove('fa-regular', 'text-gray-300');
+                    }
+                    // Reload header to update count
+                    // A better implementation would be to update the count via JS
+                    setTimeout(() => {
+                        $("#header-container").load(location.href + " #header-container>*", "");
+                    }, 200)
+                } else {
+                    if (data.message && data.message.includes('log in')) {
+                        window.location.href = '<?php echo $base_url; ?>/login/index.php';
+                    } else {
+                        alert(data.message || 'An error occurred.');
+                    }
                 }
             });
-        }
+        });
+    });
     </script>
-    <?php include_once __DIR__ . '/../includes/footer.php'; ?>
 </body>
 </html>

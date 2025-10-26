@@ -2,6 +2,7 @@
 session_start();
 include_once __DIR__ . '/../database/db_connection.php';
 include_once __DIR__ . '/../config.php';
+include_once __DIR__ . '/../includes/handlers/notification/createNotification.php'; // Include notification handler
 
 // Helper function to send JSON response and exit
 function send_json_response($data) {
@@ -38,15 +39,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $conn->prepare("INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, 'customer')");
             $stmt->bind_param("sss", $username, $hash, $email);
             if ($stmt->execute()) {
-                $_SESSION['user_id'] = $stmt->insert_id;
+                $user_id = $stmt->insert_id;
+                $_SESSION['user_id'] = $user_id;
                 $_SESSION['username'] = $username;
 
                 // Insert default 0 points into loyalty_points for new user
-                $user_id = $stmt->insert_id;
                 $points_stmt = $conn->prepare("INSERT INTO loyalty_points (user_id, points) VALUES (?, 0)");
                 $points_stmt->bind_param("i", $user_id);
                 $points_stmt->execute();
                 $points_stmt->close();
+
+                // Create Welcome Notification
+                create_notification(
+                    $conn,
+                    $user_id,
+                    'welcome',
+                    'Chào mừng bạn đến với Old Flavour!',
+                    'Cảm ơn bạn đã tham gia. Chúc bạn có những trải nghiệm tuyệt vời!',
+                    null,
+                    '/customer/account.php'
+                );
 
                 // Tạo mã voucher ngẫu nhiên
                 $voucher_code = strtoupper(substr(md5(uniqid($username, true)), 0, 10));
@@ -58,6 +70,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $voucher_stmt->bind_param("issdss", $user_id, $voucher_code, $program_name, $min_order_value, $status, $expires_at);
                 $voucher_stmt->execute();
                 $voucher_stmt->close();
+
+                // Create Voucher Notification
+                create_notification(
+                    $conn,
+                    $user_id,
+                    'voucher_received',
+                    'Bạn đã nhận được voucher chào mừng!',
+                    "Một voucher giảm giá 10% đã được thêm vào ví của bạn. Mã: {$voucher_code}",
+                    null,
+                    '/customer/vouchers.php'
+                );
 
                 include_once __DIR__ . '/sendGiftVoucher.php';
                 sendGiftVoucher($email, $username, $voucher_code);

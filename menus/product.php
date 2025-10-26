@@ -26,6 +26,19 @@ $sizeQuery = $conn->prepare("SELECT * FROM product_sizes WHERE product_id = ?");
 $sizeQuery->bind_param("i", $product['product_id']);
 $sizeQuery->execute();
 $sizeResult = $sizeQuery->get_result();
+
+// Check if product is in favourites
+$is_favourited = false;
+if (isset($_SESSION['user_id'])) {
+    $fav_check_sql = "SELECT id FROM favourites WHERE customer_id = ? AND product_id = ?";
+    $fav_check_stmt = $conn->prepare($fav_check_sql);
+    $fav_check_stmt->bind_param("ii", $_SESSION['user_id'], $product['product_id']);
+    $fav_check_stmt->execute();
+    if ($fav_check_stmt->get_result()->num_rows > 0) {
+        $is_favourited = true;
+    }
+    $fav_check_stmt->close();
+}
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -62,7 +75,12 @@ $sizeResult = $sizeQuery->get_result();
             <span class="mx-2 text-pink-300 font-bold">/</span>
             <span class="text-pink-600"><?php echo $product['name']; ?></span>
         </nav>
-        <div class="bg-white rounded-2xl shadow-xl p-8 flex flex-col md:flex-row gap-8 items-center">
+        <div class="relative bg-white rounded-2xl shadow-xl p-8 flex flex-col md:flex-row gap-8 items-center">
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <button id="favourite-btn" class="absolute top-4 right-4 <?php echo $is_favourited ? 'bg-pink-600 text-white' : 'bg-gray-200 text-gray-700'; ?> px-4 py-2 rounded-full font-bold text-lg shadow transition duration-200" data-product-id="<?php echo $product['product_id']; ?>">
+                    <i class="fa <?php echo $is_favourited ? 'fa-heart-circle-check' : 'fa-heart'; ?>"></i>
+                </button>
+            <?php endif; ?>
             <div class="flex-shrink-0">
                 <img src="<?php echo $base_url . '/' . ($product['image'] ?: 'Photos/placeholder.png'); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="w-64 h-64 object-cover rounded-xl shadow bg-gray-100 border-2 border-pink-100" />
             </div>
@@ -91,6 +109,7 @@ $sizeResult = $sizeQuery->get_result();
                 <div class="mb-4 text-gray-700 text-base leading-relaxed"><?php echo $product['description'] ?: '<span class="italic text-gray-400">Chưa có mô tả cho sản phẩm này.</span>'; ?></div>
                 <div class="flex gap-4 mt-6">
                     <button id="add-to-cart-btn" class="btn-orange hover:bg-orange-600 text-white px-8 py-3 rounded-xl font-bold text-lg shadow transition duration-200"><i class="fa fa-shopping-cart mr-2"></i>Thêm món ngay</button>
+                    
                     <a href="menus.php?cat=<?php echo generateSlug($product['category_name']); ?>" class="bg-gray-100 hover:bg-pink-100 text-pink-600 px-6 py-3 rounded-xl font-bold text-lg shadow transition duration-200"><i class="fa fa-arrow-left mr-2"></i>Quay lại menu</a>
                 </div>
             </div>
@@ -165,6 +184,51 @@ $sizeResult = $sizeQuery->get_result();
                 }
             });
         };
+
+        // Handle favourite button click
+        const favBtn = document.getElementById('favourite-btn');
+        if (favBtn) {
+            favBtn.addEventListener('click', function() {
+                const productId = this.dataset.productId;
+                const isFavourited = this.classList.contains('bg-pink-600');
+                
+                const url = isFavourited 
+                    ? '<?php echo $base_url; ?>/includes/handlers/favourite/removeFavourite.php'
+                    : '<?php echo $base_url; ?>/includes/handlers/favourite/addFavourite.php';
+
+                const formData = new FormData();
+                formData.append('product_id', productId);
+
+                fetch(url, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Toggle button appearance
+                        if (isFavourited) {
+                            this.classList.remove('bg-pink-600', 'text-white');
+                            this.classList.add('bg-gray-200', 'text-gray-700');
+                            this.querySelector('i').classList.remove('fa-heart-circle-check');
+                            this.querySelector('i').classList.add('fa-heart');
+                            showToast('Removed from wishlist!');
+                        } else {
+                            this.classList.add('bg-pink-600', 'text-white');
+                            this.classList.remove('bg-gray-200', 'text-gray-700');
+                            this.querySelector('i').classList.add('fa-heart-circle-check');
+                            this.querySelector('i').classList.remove('fa-heart');
+                            showToast('Added to wishlist!');
+                        }
+                        // Update header count (simple reload)
+                        // A more advanced version would update the badge via JS
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        showToast(data.message || 'An error occurred.', true);
+                    }
+                });
+            });
+        }
     </script>
 </body>
 
