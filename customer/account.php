@@ -2,8 +2,8 @@
 session_start();
 include_once __DIR__ . '/../database/db_connection.php';
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ./login/index.php');
-    exit;
+  header('Location: ./login/index.php');
+  exit;
 }
 
 // Fetch user data
@@ -15,12 +15,14 @@ $stmt->bind_result($full_name, $email);
 $stmt->fetch();
 $stmt->close();
 ?>
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tài khoản khách hàng | Old Favour Coffee</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+
 </head>
 <?php include '../includes/header.php'; ?>
 
@@ -47,7 +49,7 @@ $stmt->close();
 
     <!-- Nội dung chính -->
     <section class="md:col-span-9 col-span-12 bg-white rounded-3xl shadow-2xl p-8 min-h-[500px]" id="account-content">
-      <div class="flex flex-col items-center justify-center h-full"> 
+      <div class="flex flex-col items-center justify-center h-full">
         <div class="animate-pulse w-24 h-24 bg-pink-100 rounded-full mb-6"></div>
         <div class="text-center text-gray-400 mt-10">
           <i class="fa fa-info-circle text-4xl mb-4"></i>
@@ -61,16 +63,16 @@ $stmt->close();
 <?php include '../includes/footer.php'; ?>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-// Khi load account.php có tham số ?page=...
-$(document).ready(function() {
-  var page = "<?php echo isset($_GET['page']) ? $_GET['page'] : ''; ?>";
-  if (page) {
-    $("a[data-page='" + page + ".php']").trigger("click");
-  }
-});
+  // Khi load account.php có tham số ?page=...
+  $(document).ready(function() {
+    var page = "<?php echo isset($_GET['page']) ? $_GET['page'] : ''; ?>";
+    if (page) {
+      $("a[data-page='" + page + ".php']").trigger("click");
+    }
+  });
 
-// AJAX load nội dung khi click
-$(document).on("click", "a[data-page]", function(e) {
+  // AJAX load nội dung khi click
+  $(document).on("click", "a[data-page]", function(e) {
     e.preventDefault();
     let page = $(this).data("page");
     let content = $("#account-content");
@@ -82,8 +84,13 @@ $(document).on("click", "a[data-page]", function(e) {
     fetch(page)
       .then(res => res.text())
       .then(html => {
-        setTimeout(() => { content.html(html); }, 400);
-        window.scrollTo({ top: content.offset().top - 80, behavior: 'smooth' });
+        setTimeout(() => {
+          content.html(html);
+        }, 400);
+        window.scrollTo({
+          top: content.offset().top - 80,
+          behavior: 'smooth'
+        });
       });
-});
+  });
 </script>
