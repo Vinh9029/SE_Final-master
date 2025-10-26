@@ -6,96 +6,106 @@ include_once __DIR__ . '/../includes/handlers/notification/createNotification.ph
 
 // Helper function to send JSON response and exit
 function send_json_response($data) {
+    // It's crucial to prevent any other output
+    if (ob_get_level()) ob_clean();
     header('Content-Type: application/json');
     echo json_encode($data);
     exit;
 }
 
-$register_error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
+
+    // Validation checks
     if ($password !== $confirm_password) {
-        $register_error = "Mật khẩu không khớp.";
-    } elseif (strlen($password) < 8) {
-        $register_error = "Mật khẩu phải có ít nhất 8 ký tự.";
-    } elseif (!preg_match('/[a-z]/', $password)) {
-        $register_error = "Mật khẩu phải chứa ít nhất một chữ cái viết thường.";
-    } elseif (!preg_match('/[A-Z]/', $password)) {
-        $register_error = "Mật khẩu phải chứa ít nhất một chữ cái viết hoa.";
-    } elseif (!preg_match('/[!@#$%^&*(),.?":{}|<>]/', $password)) {
-        $register_error = "Mật khẩu phải chứa ít nhất một ký tự đặc biệt.";
-    } else {
-        $stmt = $conn->prepare("SELECT user_id FROM users WHERE username=? OR email=?");
-        $stmt->bind_param("ss", $username, $email);
-        $stmt->execute();
-        $stmt->store_result();
-        if ($stmt->num_rows > 0) {
-            $register_error = "Tên người dùng hoặc email đã tồn tại.";
-        } else {
-            $hash = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $conn->prepare("INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, 'customer')");
-            $stmt->bind_param("sss", $username, $hash, $email);
-            if ($stmt->execute()) {
-                $user_id = $stmt->insert_id;
-                $_SESSION['user_id'] = $user_id;
-                $_SESSION['username'] = $username;
+        send_json_response(['status' => 'error', 'message' => 'Mật khẩu không khớp.']);
+    }
+    if (strlen($password) < 8) {
+        send_json_response(['status' => 'error', 'message' => 'Mật khẩu phải có ít nhất 8 ký tự.']);
+    }
+    if (!preg_match('/[a-z]/', $password)) {
+        send_json_response(['status' => 'error', 'message' => 'Mật khẩu phải chứa ít nhất một chữ cái viết thường.']);
+    }
+    if (!preg_match('/[A-Z]/', $password)) {
+        send_json_response(['status' => 'error', 'message' => 'Mật khẩu phải chứa ít nhất một chữ cái viết hoa.']);
+    }
+    if (!preg_match('/[!@#$%^&*(),.?":{}|<>]/', $password)) {
+        send_json_response(['status' => 'error', 'message' => 'Mật khẩu phải chứa ít nhất một ký tự đặc biệt.']);
+    }
 
-                // Insert default 0 points into loyalty_points for new user
-                $points_stmt = $conn->prepare("INSERT INTO loyalty_points (user_id, points) VALUES (?, 0)");
-                $points_stmt->bind_param("i", $user_id);
-                $points_stmt->execute();
-                $points_stmt->close();
-
-                // Create Welcome Notification
-                create_notification(
-                    $conn,
-                    $user_id,
-                    'welcome',
-                    'Chào mừng bạn đến với Old Flavour!',
-                    'Cảm ơn bạn đã tham gia. Chúc bạn có những trải nghiệm tuyệt vời!',
-                    null,
-                    '/customer/account.php'
-                );
-
-                // Tạo mã voucher ngẫu nhiên
-                $voucher_code = strtoupper(substr(md5(uniqid($username, true)), 0, 10));
-                $program_name = 'Chào mừng thành viên mới';
-                $min_order_value = 0;
-                $status = 'active';
-                $expires_at = date('Y-m-d', strtotime('+30 days'));
-                $voucher_stmt = $conn->prepare("INSERT INTO vouchers (user_id, code, discount_percent, program_name, min_order_value, status, expires_at) VALUES (?, ?, 10, ?, ?, ?, ?)");
-                $voucher_stmt->bind_param("issdss", $user_id, $voucher_code, $program_name, $min_order_value, $status, $expires_at);
-                $voucher_stmt->execute();
-                $voucher_stmt->close();
-
-                // Create Voucher Notification
-                create_notification(
-                    $conn,
-                    $user_id,
-                    'voucher_received',
-                    'Bạn đã nhận được voucher chào mừng!',
-                    "Một voucher giảm giá 10% đã được thêm vào ví của bạn. Mã: {$voucher_code}",
-                    null,
-                    '/customer/vouchers.php'
-                );
-
-                include_once __DIR__ . '/sendGiftVoucher.php';
-                sendGiftVoucher($email, $username, $voucher_code);
-                send_json_response(['status' => 'success', 'message' => 'Đăng ký thành công!', 'redirect' => $base_url . '/index.php']);
-            } else {
-                $register_error = "Đăng ký thất bại. Vui lòng thử lại.";
-            }
-        }
+    // Check for existing user
+    $stmt = $conn->prepare("SELECT user_id FROM users WHERE username=? OR email=?");
+    $stmt->bind_param("ss", $username, $email);
+    $stmt->execute();
+    $stmt->store_result();
+    if ($stmt->num_rows > 0) {
         $stmt->close();
+        send_json_response(['status' => 'error', 'message' => 'Tên người dùng hoặc email đã tồn tại.']);
     }
-    // If we are here, it means there was an error. Send it as JSON.
-    if ($register_error) {
-        send_json_response(['status' => 'error', 'message' => $register_error]);
+    $stmt->close();
+
+    // Create new user
+    $hash = password_hash($password, PASSWORD_DEFAULT);
+    $stmt = $conn->prepare("INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, 'customer')");
+    $stmt->bind_param("sss", $username, $hash, $email);
+
+    if ($stmt->execute()) {
+        $user_id = $stmt->insert_id;
+        $_SESSION['user_id'] = $user_id;
+        $_SESSION['username'] = $username;
+
+        // Insert default 0 points into loyalty_points for new user
+        $points_stmt = $conn->prepare("INSERT INTO loyalty_points (user_id, points) VALUES (?, 0)");
+        $points_stmt->bind_param("i", $user_id);
+        $points_stmt->execute();
+        $points_stmt->close();
+
+        // Create Welcome Notification
+        create_notification(
+            $conn,
+            $user_id,
+            'welcome',
+            'Chào mừng bạn đến với Old Flavour!',
+            'Cảm ơn bạn đã tham gia. Chúc bạn có những trải nghiệm tuyệt vời!',
+            null,
+            '/customer/account.php'
+        );
+
+        // Tạo mã voucher ngẫu nhiên
+        $voucher_code = strtoupper(substr(md5(uniqid($username, true)), 0, 10));
+        $program_name = 'Chào mừng thành viên mới';
+        $min_order_value = 0;
+        $status = 'active';
+        $expires_at = date('Y-m-d', strtotime('+30 days'));
+        $voucher_stmt = $conn->prepare("INSERT INTO vouchers (user_id, code, discount_percent, program_name, min_order_value, status, expires_at) VALUES (?, ?, 10, ?, ?, ?, ?)");
+        $voucher_stmt->bind_param("issdss", $user_id, $voucher_code, $program_name, $min_order_value, $status, $expires_at);
+        $voucher_stmt->execute();
+        $voucher_stmt->close();
+
+        // Create Voucher Notification
+        create_notification(
+            $conn,
+            $user_id,
+            'voucher_received',
+            'Bạn đã nhận được voucher chào mừng!',
+            "Một voucher giảm giá 10% đã được thêm vào ví của bạn. Mã: {$voucher_code}",
+            null,
+            '/customer/vouchers.php'
+        );
+
+        include_once __DIR__ . '/sendGiftVoucher.php';
+        sendGiftVoucher($email, $username, $voucher_code);
+        send_json_response(['status' => 'success', 'message' => 'Đăng ký thành công!', 'redirect' => $base_url . '/index.php']);
+    } else {
+        send_json_response(['status' => 'error', 'message' => 'Đăng ký thất bại. Vui lòng thử lại.']);
     }
+    $stmt->close();
 }
+
+$register_error = '';
 ?>
 <!DOCTYPE html>
 <html lang="en">

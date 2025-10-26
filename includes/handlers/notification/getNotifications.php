@@ -56,35 +56,44 @@ if ($is_mini) {
 
 // Add script for marking as read
 if ($is_mini) {
-    echo <<<HTML
+    $markAsReadUrl = $base_url . '/includes/handlers/notification/markAsRead.php';
+    echo '
     <script>
-    document.querySelectorAll('.notification-item').forEach(item => {
-        item.addEventListener('click', function(e) {
+    document.querySelectorAll(".notification-item").forEach(item => {
+        item.addEventListener("click", function(e) {
             const notifId = this.dataset.id;
-            fetch(`<?php echo $base_url; ?>/includes/handlers/notification/markAsRead.php?id=${notifId}`);
-            // No need to prevent default, let the user navigate
+            // Mark as read, but don\'t wait for it to finish before navigating
+            fetch(`' . $markAsReadUrl . '?id=${notifId}`);
         });
     });
 
-    const markAllReadBtn = document.getElementById('mark-all-read');
+    const markAllReadBtn = document.getElementById("mark-all-read");
     if(markAllReadBtn) {
-        markAllReadBtn.addEventListener('click', function(e) {
+        markAllReadBtn.addEventListener("click", function(e) {
             e.preventDefault();
             e.stopPropagation();
-            fetch(`<?php echo $base_url; ?>/includes/handlers/notification/markAsRead.php?all=true`)
-                .then(() => {
-                    // Visually mark all as read
-                    document.querySelectorAll('.notification-item').forEach(item => {
-                        item.style.fontWeight = 'normal';
-                        item.style.backgroundColor = 'white';
-                    });
-                    const badge = document.getElementById('notification-badge');
-                    if (badge) badge.style.display = 'none';
+            fetch(`' . $markAsReadUrl . '?all=true`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        // Visually mark all as read
+                        document.querySelectorAll(".notification-item").forEach(item => {
+                            const titleDiv = item.querySelector("div:first-child");
+                            if (titleDiv) {
+                                titleDiv.classList.remove("font-bold");
+                                titleDiv.classList.add("font-normal");
+                            }
+                            item.classList.remove("bg-pink-50");
+                            item.classList.add("bg-white");
+                        });
+                        const badge = document.getElementById("notification-badge");
+                        if (badge) badge.style.display = "none";
+                    }
                 });
         });
     }
     </script>
-HTML;
+    ';
 }
 
 
