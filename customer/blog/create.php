@@ -1,5 +1,10 @@
 <?php
-include_once __DIR__ . '/../../includes/header.php';
+// 1. LOGIC FIRST: Start session, include config/DB, and process the form.
+// No HTML output should happen in this section.
+include_once __DIR__ . '/../../config.php';
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 include_once __DIR__ . '/../../database/db_connection.php';
 
 // Chỉ cho phép người dùng đã đăng nhập truy cập
@@ -8,23 +13,24 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-function create_slug($string)
-{
-    $search = array('À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Ç', 'È', 'É', 'Ê', 'Ë', 'Ì', 'Í', 'Î', 'Ï', 'Ñ', 'Ò', 'Ó', 'Ô', 'Õ', 'Ö', 'Ù', 'Ú', 'Û', 'Ü', 'Ý', 'à', 'á', 'â', 'ã', 'ä', 'å', 'ç', 'è', 'é', 'ê', 'ë', 'ì', 'í', 'î', 'ï', 'ñ', 'ò', 'ó', 'ô', 'õ', 'ö', 'ù', 'ú', 'û', 'ü', 'ý', 'ÿ', '(', ')', '[', ']', '{', '}', ' ');
-    $replace = array('A', 'A', 'A', 'A', 'A', 'A', 'C', 'E', 'E', 'E', 'E', 'I', 'I', 'I', 'I', 'N', 'O', 'O', 'O', 'O', 'O', 'U', 'U', 'U', 'U', 'Y', 'a', 'a', 'a', 'a', 'a', 'a', 'c', 'e', 'e', 'e', 'e', 'i', 'i', 'i', 'i', 'n', 'o', 'o', 'o', 'o', 'o', 'u', 'u', 'u', 'u', 'y', 'y', '-', '-', '-', '-', '-', '-', '-');
-    $string = str_replace($search, $replace, $string);
-    $string = strtolower($string);
-    $string = preg_replace('/[^a-z0-9-]/', '', $string);
-    $string = preg_replace('/-+/', '-', $string);
-    return trim($string, '-');
-}
-
 $errors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_id = $_SESSION['user_id'];
     $title = trim($_POST['title'] ?? '');
     $content = trim($_POST['content'] ?? '');
-    $slug = create_slug($title) . '-' . time(); // Thêm timestamp để slug luôn unique
+
+    // Slug creation logic
+    function create_slug($string)
+    {
+        $search = array('À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Ç', 'È', 'É', 'Ê', 'Ë', 'Ì', 'Í', 'Î', 'Ï', 'Ñ', 'Ò', 'Ó', 'Ô', 'Õ', 'Ö', 'Ù', 'Ú', 'Û', 'Ü', 'Ý', 'à', 'á', 'â', 'ã', 'ä', 'å', 'ç', 'è', 'é', 'ê', 'ë', 'ì', 'í', 'î', 'ï', 'ñ', 'ò', 'ó', 'ô', 'õ', 'ö', 'ù', 'ú', 'û', 'ü', 'ý', 'ÿ', '(', ')', '[', ']', '{', '}', ' ');
+        $replace = array('A', 'A', 'A', 'A', 'A', 'A', 'C', 'E', 'E', 'E', 'E', 'I', 'I', 'I', 'I', 'N', 'O', 'O', 'O', 'O', 'O', 'U', 'U', 'U', 'U', 'Y', 'a', 'a', 'a', 'a', 'a', 'a', 'c', 'e', 'e', 'e', 'e', 'i', 'i', 'i', 'i', 'n', 'o', 'o', 'o', 'o', 'o', 'u', 'u', 'u', 'u', 'y', 'y', '-', '-', '-', '-', '-', '-', '-');
+        $string = str_replace($search, $replace, $string);
+        $string = strtolower($string);
+        $string = preg_replace('/[^a-z0-9-]/', '', $string);
+        $string = preg_replace('/-+/', '-', $string);
+        return trim($string, '-');
+    }
+    $slug = create_slug($title) . '-' . time();
 
     if (empty($title)) $errors[] = "Tiêu đề không được để trống.";
     if (empty($content)) $errors[] = "Nội dung không được để trống.";
@@ -56,6 +62,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+?>
+<?php
+// 2. PRESENTATION SECOND: Now that all logic is done, we can safely include the header and start outputting HTML.
+// This part of the code will only be reached if the form was not submitted or if there were validation errors.
+include_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <head>

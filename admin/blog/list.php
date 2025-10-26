@@ -66,25 +66,14 @@ function get_blog_status_label($status) {
                             </td>
                             <td class="px-4 py-2 flex gap-2">
                                 <?php if ($blog['status'] === 'pending'): ?>
-                                    <form action="blog/approve.php" method="POST" class="inline-block">
-                                        <input type="hidden" name="id" value="<?php echo $blog['blog_id']; ?>">
-                                        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow transition">Duyệt</button>
-                                    </form>
-                                    <form action="blog/reject.php" method="POST" class="inline-block">
-                                        <input type="hidden" name="id" value="<?php echo $blog['blog_id']; ?>">
-                                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow transition">Từ chối</button>
-                                    </form>
+                                    <a href="blog/approve.php?id=<?php echo $blog['blog_id']; ?>" class="action-link approve-link bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow transition">Duyệt</a>
+                                    <a href="blog/reject.php?id=<?php echo $blog['blog_id']; ?>" class="action-link reject-link bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow transition">Từ chối</a>
                                 <?php elseif ($blog['status'] === 'rejected'): ?>
-                                    <form action="blog/approve.php" method="POST" class="inline-block">
-                                        <input type="hidden" name="id" value="<?php echo $blog['blog_id']; ?>">
-                                        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow transition">Duyệt lại</button>
+                                    <a href="blog/approve.php?id=<?php echo $blog['blog_id']; ?>" class="action-link approve-link bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow transition">Duyệt lại</a>
                                 <?php endif; ?>
                                 <a href="#" data-page="blog/detail.php?id=<?php echo $blog['blog_id']; ?>" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow transition">Xem</a>
                                 <a href="#" data-page="blog/edit.php?id=<?php echo $blog['blog_id']; ?>" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow transition">Sửa</a>
-                                <form action="blog/delete.php" method="POST" class="inline-block" onsubmit="return confirm('Bạn có chắc chắn muốn xóa vĩnh viễn bài viết này?');">
-                                    <input type="hidden" name="id" value="<?php echo $blog['blog_id']; ?>">
-                                    <button type="submit" class="bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded-lg text-xs font-bold shadow transition">Xóa</button>
-                                </form>
+                                <a href="blog/delete.php?id=<?php echo $blog['blog_id']; ?>" class="delete-link bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded-lg text-xs font-bold shadow transition">Xóa</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>

@@ -18,6 +18,7 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="../assets/js/chart.js"></script>
 </head>
 <body class="bg-gradient-to-br from-gray-50 via-yellow-50 to-white min-h-screen">
@@ -103,6 +104,29 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
       toast.classList.remove('hidden');
       setTimeout(() => toast.classList.add('hidden'), 3000);
     }
+    
+    // Custom confirmation modal
+    function showConfirmationModal(title, text, confirmButtonText, callback) {
+        Swal.fire({
+            title: title,
+            text: text,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: confirmButtonText,
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                callback();
+            }
+        });
+    }
+
+    function executeInlineScripts(element) {
+        const scripts = element.querySelectorAll('script');
+        scripts.forEach(script => { const newScript = document.createElement('script'); newScript.textContent = script.textContent; script.parentNode.replaceChild(newScript, script); });
+    }
 
     // Sidebar menu AJAX load
     const menuLinks = document.querySelectorAll('aside nav a[data-page]');
@@ -126,7 +150,7 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
 
                 if (newHomeContent) {
                   mainContent.appendChild(newHomeContent); // Thêm trực tiếp phần tử #dashboard-home vào mainContent
-                  executeInlineScripts(mainContent); // Thực thi script nếu có trong #dashboard-home (không có trong trường hợp này, nhưng tốt cho tính nhất quán)
+                  // executeInlineScripts(mainContent); // Scripts for charts are handled by drawDashboardCharts
                   drawDashboardCharts(); // Gọi hàm vẽ biểu đồ để khởi tạo lại các biểu đồ
                 } else {
                   mainContent.innerHTML = '<div class="text-red-500">Không thể tải nội dung dashboard.</div>';
@@ -141,6 +165,7 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
             .then(res => res.text())
             .then(html => {
               setTimeout(() => {
+                const tempDiv = document.createElement('div'); tempDiv.innerHTML = html;
                 mainContent.innerHTML = html;
                 bindAjaxLinks();
               }, 400);
@@ -151,6 +176,7 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
     });
     // Hàm này sẽ gán lại sự kiện AJAX cho các link CRUD/pagination và form submissions trong nội dung động
     function bindAjaxLinks() {
+      // Bind navigation and pagination links
       const ajaxLinks = document.querySelectorAll('#admin-main-content a[data-page]');
       ajaxLinks.forEach(link => {
         link.addEventListener('click', function(e) {
@@ -177,6 +203,63 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
         });
       });
 
+      // Bind approve/reject links for AJAX
+      const actionLinks = document.querySelectorAll('#admin-main-content a.action-link');
+      actionLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          const url = this.href;
+          const isApprove = this.classList.contains('approve-link');
+          const actionText = isApprove ? 'duyệt' : 'từ chối';
+
+          fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                showToast(data.message, 'success');
+                // Reload the list view
+                const activeLink = document.querySelector('aside nav a.bg-pink-200');
+                if (activeLink) {
+                  activeLink.click();
+                }
+              } else {
+                showToast(data.message || `Có lỗi khi ${actionText} bài viết.`, 'error');
+              }
+            }).catch(err => {
+                showToast('Lỗi kết nối. Vui lòng thử lại.', 'error');
+            });
+        });
+      });
+
+      // Bind delete links for AJAX
+      const deleteLinks = document.querySelectorAll('#admin-main-content a.delete-link');
+      deleteLinks.forEach(link => {
+          link.addEventListener('click', function(e) {
+              e.preventDefault();
+              const url = this.href;
+              showConfirmationModal(
+                  'Bạn chắc chắn muốn xóa?',
+                  'Hành động này không thể hoàn tác!',
+                  'Vâng, xóa nó!',
+                  () => {
+                      fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                          .then(res => res.json())
+                          .then(data => {
+                              if (data.success) {
+                                  showToast(data.message, 'success');
+                                  // Reload the list view
+                                  const activeLink = document.querySelector('aside nav a.bg-pink-200');
+                                  if (activeLink) {
+                                      activeLink.click();
+                                  }
+                              } else {
+                                  showToast(data.message || 'Có lỗi xảy ra.', 'error');
+                              }
+                          });
+                  }
+              );
+          });
+      });
       // Bind form submissions for AJAX
       const forms = document.querySelectorAll('#admin-main-content form');
       forms.forEach(form => {
@@ -236,21 +319,6 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
               });
               }
         });
-      });
-    }
-    // Hàm tìm và thực thi các script nội tuyến trong một phần tử
-    function executeInlineScripts(element) {
-      const scripts = element.querySelectorAll('script:not([src])'); // Chỉ chọn các script nội tuyến
-      scripts.forEach(script => {
-        const newScript = document.createElement('script');
-        newScript.textContent = script.textContent;
-        // Thay thế thẻ script cũ bằng thẻ mới để đảm bảo nó được thực thi
-        if (script.parentNode) {
-            script.parentNode.replaceChild(newScript, script);
-        } else {
-            // Nếu không có parentNode, thêm vào cuối element
-            element.appendChild(newScript);
-        }
       });
     }
     // Gắn sự kiện ban đầu khi DOM đã tải xong

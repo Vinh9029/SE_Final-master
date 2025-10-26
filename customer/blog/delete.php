@@ -1,10 +1,15 @@
 <?php
-include_once __DIR__ . '/../../includes/header.php';
-include_once __DIR__ . '/../../database/db_connection.php'; // Đảm bảo kết nối CSDL
+// This is a logic-only file. It should not output any HTML.
+// Start session and include only necessary config/db files.
+include_once __DIR__ . '/../../config.php';
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+include_once __DIR__ . '/../../database/db_connection.php';
 
 // Chỉ cho phép người dùng đã đăng nhập truy cập
 if (!isset($_SESSION['user_id'])) {
-    header("Location: " . ($base_url ?? '') . "/login/index.php");
+    header("Location: " . $base_url . "/login/index.php");
     exit();
 }
 

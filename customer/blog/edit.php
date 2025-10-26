@@ -1,5 +1,10 @@
 <?php
-include_once __DIR__ . '/../../includes/header.php';
+// 1. LOGIC FIRST: Start session, include config/DB, and process all logic.
+// No HTML output should happen in this section.
+include_once __DIR__ . '/../../config.php';
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 include_once __DIR__ . '/../../database/db_connection.php';
 
 // Chỉ cho phép người dùng đã đăng nhập truy cập
@@ -83,6 +88,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+?>
+<?php
+// 2. PRESENTATION SECOND: Now that all logic is done, we can safely include the header and start outputting HTML.
+// This part of the code will only be reached if the page is loaded for editing (GET request)
+// or if a form submission (POST request) had validation errors.
+include_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <head>
