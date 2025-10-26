@@ -41,6 +41,8 @@ $stmt->close();
           <li><a href="#" data-page="profile.php" class="block px-4 py-2 rounded-xl font-semibold text-gray-700 hover:bg-pink-100 transition flex items-center group"><i class="fa fa-user mr-2 text-pink-500"></i> Thông tin cá nhân</a></li>
           <li><a href="#" data-page="orders.php" class="block px-4 py-2 rounded-xl font-semibold text-gray-700 hover:bg-orange-100 transition flex items-center group"><i class="fa fa-box mr-2 text-orange-500"></i> Đơn hàng</a></li>
           <li><a href="#" data-page="vouchers.php" class="block px-4 py-2 rounded-xl font-semibold text-gray-700 hover:bg-green-100 transition flex items-center group"><i class="fa fa-ticket-alt mr-2 text-green-500"></i> Voucher của tôi</a></li>
+          <li><a href="#" data-page="favourites.php" class="block px-4 py-2 rounded-xl font-semibold text-gray-700 hover:bg-red-100 transition flex items-center group"><i class="fa fa-heart mr-2 text-red-500"></i> Sản phẩm yêu thích</a></li>
+          <li><a href="#" data-page="comments.php" class="block px-4 py-2 rounded-xl font-semibold text-gray-700 hover:bg-purple-100 transition flex items-center group"><i class="fa fa-comments mr-2 text-purple-500"></i> Bình luận của tôi</a></li>
           <li><a href="#" data-page="settings.php" class="block px-4 py-2 rounded-xl font-semibold text-gray-700 hover:bg-yellow-100 transition flex items-center group"><i class="fa fa-cog mr-2 text-yellow-500"></i> Cài đặt tài khoản</a></li>
           <li><a href="logout.php" class="block px-4 py-2 rounded-xl font-semibold text-gray-700 hover:bg-red-100 transition flex items-center group"><i class="fa fa-sign-out-alt mr-2 text-red-500"></i> Đăng xuất</a></li>
         </ul>
