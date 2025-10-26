@@ -189,6 +189,39 @@ if (!isset($_SESSION['user_id'])) {
             loader.style.display = show ? 'block' : 'none';
         }
 
+        function showConfirm(message, onConfirm) {
+            let modal = document.getElementById('confirm-modal');
+            if (!modal) {
+                const modalHtml = `
+                    <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 transition-opacity duration-300 opacity-0" style="display: none;">
+                        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md text-center transform scale-95 transition-all duration-300">
+                            <div class="mb-4">
+                                <i class="fas fa-question-circle text-pink-500 text-5xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">Bạn có chắc chắn?</h3>
+                            <p id="confirm-modal-message" class="text-gray-600 mb-8"></p>
+                            <div class="flex justify-center gap-4">
+                                <button id="confirm-modal-cancel" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 py-3 rounded-full font-bold transition-colors">Hủy bỏ</button>
+                                <button id="confirm-modal-confirm" class="btn-primary text-white px-8 py-3 rounded-full font-bold transition-colors">Xác nhận</button>
+                            </div>
+                        </div>
+                    </div>`;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                modal = document.getElementById('confirm-modal');
+                const confirmBtn = document.getElementById('confirm-modal-confirm');
+                const cancelBtn = document.getElementById('confirm-modal-cancel');
+                const closeModal = () => {
+                    modal.classList.add('opacity-0', 'scale-95');
+                    setTimeout(() => modal.style.display = 'none', 300);
+                };
+                cancelBtn.onclick = closeModal;
+                confirmBtn.onclick = () => { onConfirm(); closeModal(); };
+            }
+            document.getElementById('confirm-modal-message').textContent = message;
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.remove('opacity-0', 'scale-95'), 10);
+        }
+
         // Voucher click
         document.querySelectorAll('.voucher-btn').forEach(btn => {
             btn.onclick = function() {
@@ -313,15 +346,15 @@ if (!isset($_SESSION['user_id'])) {
                 const cartItem = btn.closest('.cart-item');
                 const productId = cartItem.dataset.productId;
                 const sizeId = cartItem.dataset.sizeId || null;
-                if (confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) {
+                showConfirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?', () => {
                     ajaxCartAction('remove.php', {
                         product_id: productId,
                         size_id: sizeId
                     }, () => {
                         cartItem.remove();
                         refreshCartUI();
-                    });
-                }
+                    }); 
+                });
             };
         });
         document.querySelectorAll('.quantity-btn').forEach(btn => {
@@ -344,12 +377,12 @@ if (!isset($_SESSION['user_id'])) {
             };
         });
         document.querySelector('.bg-gray-200 .fa-trash').parentElement.onclick = function() {
-            if (confirm('Bạn có chắc muốn xóa tất cả sản phẩm khỏi giỏ hàng?')) {
+            showConfirm('Bạn có chắc muốn xóa tất cả sản phẩm khỏi giỏ hàng?', () => {
                 ajaxCartAction('clear.php', {}, () => {
                     document.getElementById('cart-items').innerHTML = '';
                     refreshCartUI();
                 });
-            }
+            });
         };
 
         // Khi thêm sản phẩm ở trang khác, sau khi thêm xong cũng gọi updateCartBadge()

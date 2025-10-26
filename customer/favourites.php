@@ -72,6 +72,56 @@ $stmt->close();
 </div>
 
 <script>
+function showToast(message, isError = false) {
+    let toast = document.getElementById('toast-notification');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast-notification';
+        toast.className = 'fixed top-20 right-5 text-white py-3 px-6 rounded-xl shadow-lg transform translate-x-full transition-transform duration-300 ease-in-out z-50';
+        document.body.appendChild(toast);
+    }
+    toast.innerHTML = `<i class="fa ${isError ? 'fa-times-circle' : 'fa-check-circle'} mr-2"></i> ${message}`;
+    toast.style.backgroundColor = isError ? '#ef4444' : '#22c55e'; // red-500 or green-500
+    
+    // Show toast
+    toast.classList.remove('translate-x-full');
+    
+    // Hide after 3 seconds
+    setTimeout(() => {
+        toast.classList.add('translate-x-full');
+    }, 3000);
+}
+
+function showConfirm(message, onConfirm) {
+    let modal = document.getElementById('confirm-modal');
+    if (!modal) {
+        const modalHtml = `
+            <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 transition-opacity duration-300 opacity-0" style="display: none;">
+                <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md text-center transform scale-95 transition-all duration-300">
+                    <div class="mb-4">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-5xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Bạn có chắc chắn?</h3>
+                    <p id="confirm-modal-message" class="text-gray-600 mb-8"></p>
+                    <div class="flex justify-center gap-4">
+                        <button id="confirm-modal-cancel" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 py-3 rounded-full font-bold transition-colors">Hủy bỏ</button>
+                        <button id="confirm-modal-confirm" class="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full font-bold transition-colors">Xác nhận</button>
+                    </div>
+                </div>
+            </div>`;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        modal = document.getElementById('confirm-modal');
+        const confirmBtn = document.getElementById('confirm-modal-confirm');
+        const cancelBtn = document.getElementById('confirm-modal-cancel');
+        const closeModal = () => { modal.style.display = 'none'; };
+        cancelBtn.onclick = closeModal;
+        confirmBtn.onclick = () => { onConfirm(); closeModal(); };
+    }
+    document.getElementById('confirm-modal-message').textContent = message;
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.remove('opacity-0', 'scale-95'), 10);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const favouriteItems = document.querySelectorAll('.favourite-item');
 
@@ -94,11 +144,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert('Added to cart!');
+                        showToast('Đã thêm vào giỏ hàng!');
                         // Optionally, update cart count in header
-                        location.reload(); // Simple way to update header count
+                        setTimeout(() => location.reload(), 800); // Simple way to update header count
                     } else {
-                        alert(data.message || 'Could not add to cart.');
+                        showToast(data.message || 'Could not add to cart.', true);
                     }
                 });
             });
@@ -107,9 +157,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Remove from favourite functionality
         if(removeBtn) {
             removeBtn.addEventListener('click', function() {
-                if (!confirm('Are you sure you want to remove this item from your wishlist?')) {
-                    return;
-                }
+                showConfirm('Muốn xóa khỏi whislist không?', () => {
 
                 const formData = new FormData();
                 formData.append('product_id', productId);
@@ -131,10 +179,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             }
                         }, 500);
                     } else {
-                        alert(data.message || 'Could not remove item.');
+                        showToast(data.message || 'Could not remove item.', true);
                     }
                 });
-            });
+                });
+            }); 
         }
     });
 });
