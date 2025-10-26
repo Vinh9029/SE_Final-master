@@ -174,3 +174,37 @@ CREATE TABLE notifications (
   is_read TINYINT(1) DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- =================================================================
+-- Table for Comments functionality
+-- =================================================================
+CREATE TABLE comments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  target_type ENUM('product', 'blog') NOT NULL,
+  target_id INT NOT NULL,
+  content TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP,
+  status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+  parent_id INT DEFAULT NULL, -- Allows for nested replies
+  likes INT DEFAULT 0,
+  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+  FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
+);
+
+-- Add indexes for better performance on lookups
+CREATE INDEX idx_comments_target ON comments (target_type, target_id);
+
+-- =================================================================
+-- Table for Comment Likes
+-- =================================================================
+CREATE TABLE comment_likes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  comment_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+  FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE,
+  UNIQUE KEY (user_id, comment_id) -- Ensures a user can only like a comment once
+);

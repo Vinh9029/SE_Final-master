@@ -6,7 +6,6 @@ include_once '../../../includes/handlers/notification/createNotification.php';
 // Check if the user is logged in and is an admin
 $is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
 
-// Check if the user is logged in and is an admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     if ($is_ajax) {
         header('Content-Type: application/json');
@@ -32,15 +31,15 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
         $comment = $result->fetch_assoc();
         $author_id = $comment['user_id'];
 
-        $update_stmt = $db_connection->prepare("UPDATE comments SET status = 'approved' WHERE id = ?");
+        $update_stmt = $db_connection->prepare("UPDATE comments SET status = 'rejected' WHERE id = ?");
         $update_stmt->bind_param("i", $comment_id);
 
         if ($update_stmt->execute()) {
-            $notification_message = "Your recent comment has been approved.";
-            createNotification($author_id, $notification_message, 'comment_approved', $comment_id, $db_connection);
-            $response = ['success' => true, 'message' => 'Comment approved successfully.'];
+            $notification_message = "Your recent comment was rejected by an administrator.";
+            createNotification($author_id, $notification_message, 'comment_rejected', $comment_id, $db_connection);
+            $response = ['success' => true, 'message' => 'Comment rejected successfully.'];
         } else {
-            $response['message'] = 'Error: Could not approve the comment.';
+            $response['message'] = 'Error: Could not reject the comment.';
         }
         $update_stmt->close();
     } else {
@@ -54,7 +53,7 @@ $db_connection->close();
 if ($is_ajax) {
     header('Content-Type: application/json');
     if (!$response['success']) {
-        http_response_code(400);
+        http_response_code(400); // Bad Request or appropriate error code
     }
     echo json_encode($response);
 } else {
