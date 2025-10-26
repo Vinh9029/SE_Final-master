@@ -37,12 +37,3 @@ if ($stmt->execute()) {
 $stmt->close();
 
 echo json_encode($response);
-exit();
-    $stmt = $conn->prepare("UPDATE blogs SET status = 'approved' WHERE blog_id = ?");
-    $stmt->bind_param("i", $blog_id);
-    $stmt->execute();
-    $stmt->close();
-    $_SESSION['admin_blog_message'] = "Đã duyệt bài viết thành công!";
-}
-header('Location: ../dashboard.php?page=blog/list.php'); // Chuyển hướng sau khi xử lý non-AJAX
-exit();
