@@ -183,7 +183,58 @@ if (isset($_SESSION['user_id'])) {
     
     <?php include_once __DIR__ . '/../includes/footer.php'; ?>
 
+    <!-- Toast Notification -->
+    <div id="toast-notification" class="fixed top-20 right-5 text-white py-3 px-6 rounded-xl shadow-lg transform translate-x-full transition-transform duration-300 ease-in-out z-50" style="display: none;"></div>
+
     <script>
+    function showToast(message, isError = false) {
+        let toast = document.getElementById('toast-notification');
+        if (toast) {
+            toast.style.display = 'block';
+            toast.innerHTML = `<i class="fa ${isError ? 'fa-times-circle' : 'fa-check-circle'} mr-2"></i> ${message}`;
+            toast.style.backgroundColor = isError ? '#ef4444' : '#22c55e'; // red-500 or green-500
+            
+            // Show toast
+            setTimeout(() => toast.classList.remove('translate-x-full'), 10);
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => toast.style.display = 'none', 300);
+            }, 3000);
+        }
+    }
+
+    function showConfirm(message, onConfirm) {
+        let modal = document.getElementById('confirm-modal');
+        if (!modal) {
+            const modalHtml = `
+                <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 transition-opacity duration-300 opacity-0" style="display: none;">
+                    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md text-center transform scale-95 transition-all duration-300">
+                        <div class="mb-4">
+                            <i class="fas fa-question-circle text-pink-500 text-5xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Bạn có chắc chắn?</h3>
+                        <p id="confirm-modal-message" class="text-gray-600 mb-8"></p>
+                        <div class="flex justify-center gap-4">
+                            <button id="confirm-modal-cancel" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 py-3 rounded-full font-bold transition-colors">Hủy bỏ</button>
+                            <button id="confirm-modal-confirm" class="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full font-bold transition-colors">Xác nhận</button>
+                        </div>
+                    </div>
+                </div>`;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            modal = document.getElementById('confirm-modal');
+            const confirmBtn = document.getElementById('confirm-modal-confirm');
+            const cancelBtn = document.getElementById('confirm-modal-cancel');
+            const closeModal = () => { modal.style.display = 'none'; modal.classList.add('opacity-0'); };
+            cancelBtn.onclick = closeModal;
+            confirmBtn.onclick = () => { onConfirm(); closeModal(); };
+        }
+        document.getElementById('confirm-modal-message').textContent = message;
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.remove('opacity-0', 'scale-95'), 10);
+    }
+
     // Favourite button handler
     document.querySelectorAll('.favourite-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
@@ -193,40 +244,48 @@ if (isset($_SESSION['user_id'])) {
             const icon = this.querySelector('i');
             const isFavourited = icon.classList.contains('fa-solid');
 
-            const url = isFavourited 
-                ? '<?php echo $base_url; ?>/includes/handlers/favourite/removeFavourite.php'
-                : '<?php echo $base_url; ?>/includes/handlers/favourite/addFavourite.php';
+            const performAction = () => {
+                const url = isFavourited 
+                    ? '<?php echo $base_url; ?>/includes/handlers/favourite/removeFavourite.php'
+                    : '<?php echo $base_url; ?>/includes/handlers/favourite/addFavourite.php';
 
-            const formData = new FormData();
-            formData.append('product_id', productId);
+                const formData = new FormData();
+                formData.append('product_id', productId);
 
-            fetch(url, {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    if (isFavourited) {
-                        icon.classList.remove('fa-solid', 'text-pink-500');
-                        icon.classList.add('fa-regular', 'text-gray-300');
+                fetch(url, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (isFavourited) {
+                            icon.classList.remove('fa-solid', 'text-pink-500');
+                            icon.classList.add('fa-regular', 'text-gray-300');
+                            showToast('Đã xóa khỏi danh sách yêu thích!');
+                        } else {
+                            icon.classList.add('fa-solid', 'text-pink-500');
+                            icon.classList.remove('fa-regular', 'text-gray-300');
+                            showToast('Đã thêm vào danh sách yêu thích!');
+                        }
+                        setTimeout(() => {
+                            location.reload();
+                        }, 800); // Tải lại trang sau 0.8 giây để người dùng thấy thông báo
                     } else {
-                        icon.classList.add('fa-solid', 'text-pink-500');
-                        icon.classList.remove('fa-regular', 'text-gray-300');
+                        if (data.message && data.message.includes('log in')) {
+                            window.location.href = '<?php echo $base_url; ?>/login/index.php';
+                        } else {
+                            showToast(data.message || 'An error occurred.', true);
+                        }
                     }
-                    // Reload header to update count
-                    // A better implementation would be to update the count via JS
-                    setTimeout(() => {
-                        $("#header-container").load(location.href + " #header-container>*", "");
-                    }, 200)
-                } else {
-                    if (data.message && data.message.includes('log in')) {
-                        window.location.href = '<?php echo $base_url; ?>/login/index.php';
-                    } else {
-                        alert(data.message || 'An error occurred.');
-                    }
-                }
-            });
+                });
+            };
+
+            if (isFavourited) {
+                showConfirm('Bạn có chắc muốn xóa sản phẩm này khỏi danh sách yêu thích?', performAction);
+            } else {
+                performAction();
+            }
         });
     });
     </script>
