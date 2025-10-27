@@ -248,6 +248,6 @@ Dự án **SE_Final-master** là một hệ thống thương mại điện tử 
 
 ---
 
-**Tác giả**: System Analyst  
-**Ngày tạo**: 2024  
+**Tác giả**: dxanonymous_9029  
+**Ngày tạo**: 2025
 **Phiên bản**: 1.0
