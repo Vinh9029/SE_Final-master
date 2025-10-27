@@ -10,6 +10,9 @@ $user_id = $_SESSION['user_id'];
 $message = '';
 $message_type = '';
 
+// Check if it's an AJAX request
+$is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $current_password = $_POST['current_password'] ?? '';
@@ -84,18 +87,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($updated) {
                         $message .= ' Và cập nhật mật khẩu thành công!';
                         $message_type = 'success';
-                    } else {
-                        echo '<style>@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}</style>';
-                        echo '<div id="successModal" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;z-index:9999;">
-                                <div style="background:#fff;border-radius:16px;padding:32px 24px;box-shadow:0 8px 32px 0 rgba(31,38,135,0.18);display:flex;flex-direction:column;align-items:center;">
-                                    <i class="fa-solid fa-circle-check" style="font-size:3rem;color:#4ade80;margin-bottom:12px;"></i>
-                                    <div style="font-size:1.2rem;font-weight:600;color:#16a34a;margin-bottom:8px;">Đổi mật khẩu thành công!</div>
-                                    <div style="color:#555;margin-bottom:18px;">Đang chuyển hướng về trang tài khoản...</div>
-                                    <div class="loader" style="width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #fc466b;border-radius:50%;animation:spin 1s linear infinite;"></div>
-                                </div>
-                            </div>
-                            <script>setTimeout(function(){window.location.href="account.php";}, 1800);</script>';
-                        exit;
+                    } else {                        
+                        $message = 'Cập nhật mật khẩu thành công!';
+                        $message_type = 'success';
                     }
                 } else {
                     $message = 'Có lỗi khi cập nhật mật khẩu.';
@@ -109,6 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message_type = 'error';
         }
     }
+    $conn->close(); // Close connection after all operations
 }
 ?>
 <div class="bg-yellow-50 rounded-3xl shadow-xl p-8 max-w-2xl mx-auto">
@@ -118,11 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <?php echo htmlspecialchars($message); ?>
     </div>
   <?php endif; ?>
-  <form method="post" class="flex flex-col gap-6">
-    <div>
-      <label class="block text-sm font-semibold text-gray-700 mb-1">Email mới (để trống nếu không đổi)</label>
-      <input type="email" name="new_email" class="border rounded px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-200" placeholder="Nhập email mới" />
-    </div>
+  <form method="post" action="settings.php" class="flex flex-col gap-6">
     <div>
       <label class="block text-sm font-semibold text-gray-700 mb-1">Mật khẩu hiện tại</label>
       <input type="password" name="current_password" class="border rounded px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-200" placeholder="Nhập mật khẩu hiện tại" required />
@@ -142,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <span id="progressLabel" class="text-xs font-semibold text-gray-700 min-w-[60px] text-right"></span>
     </div>
     <div id="strengthText" class="text-xs mb-1 font-semibold"></div>
-    <button type="submit" class="btn-orange hover:bg-orange-600 text-white px-8 py-3 rounded-xl font-bold shadow transition w-fit">Lưu thay đổi</button>
+    <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all w-fit flex items-center justify-center gap-2">Lưu thay đổi</button>
   </form>
 </div>
 <script>

@@ -10,6 +10,9 @@ $user_id = $_SESSION['user_id'];
 $message = '';
 $message_type = '';
 
+// Check if it's an AJAX request
+$is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $full_name = trim($_POST['full_name'] ?? '');
@@ -32,12 +35,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt->execute()) {
             $message = 'Cập nhật thông tin thành công!';
             $message_type = 'success';
+            if ($is_ajax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true, 'message' => $message]);
+                exit;
+            }
         } else {
             $message = 'Có lỗi xảy ra. Vui lòng thử lại. Lỗi: ' . $stmt->error;
             $message_type = 'error';
         }
         $stmt->close();
     }
+}
+
+if ($is_ajax && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => $message]);
+    exit;
 }
 
 // Fetch current user data
@@ -57,7 +71,7 @@ $stmt->close();
         <?php echo htmlspecialchars($message); ?>
       </div>
     <?php endif; ?>
-    <form method="post" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <form method="post" action="profile.php" class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
         <label class="block text-sm font-semibold text-gray-700 mb-1">Họ tên</label>
         <input type="text" name="full_name" class="border rounded px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-pink-200" value="<?php echo htmlspecialchars($full_name); ?>" required />
@@ -87,7 +101,7 @@ $stmt->close();
         <input type="text" name="address" class="border rounded px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-pink-200" value="<?php echo htmlspecialchars($address); ?>" />
       </div>
       <div class="md:col-span-2">
-        <button type="submit" class="btn-orange hover:bg-orange-600 text-white px-8 py-3 rounded-xl font-bold shadow transition w-fit">Lưu thay đổi</button>
+        <button type="submit" class="bg-pink-600 hover:bg-pink-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all w-fit flex items-center justify-center gap-2">Lưu thay đổi</button>
       </div>
     </form>
   </div>

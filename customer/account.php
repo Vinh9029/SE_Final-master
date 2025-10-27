@@ -80,6 +80,24 @@ $stmt->close();
 <?php include '../includes/footer.php'; ?>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+  // --- Global Toast Notification ---
+  function showToast(message, isError = false) {
+    let toast = document.getElementById('toast-notification');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast-notification';
+        toast.className = 'fixed top-24 right-5 text-white py-3 px-6 rounded-xl shadow-lg transform translate-x-full transition-transform duration-300 ease-in-out z-[100]';
+        document.body.appendChild(toast);
+    }
+    toast.innerHTML = `<i class="fa ${isError ? 'fa-times-circle' : 'fa-check-circle'} mr-2"></i> ${message}`;
+    toast.style.backgroundColor = isError ? '#ef4444' : '#22c55e'; // red-500 or green-500
+    
+    toast.classList.remove('translate-x-full');
+    setTimeout(() => {
+        toast.classList.add('translate-x-full');
+    }, 3000);
+  }
+
   // --- Global Modal Logic ---
   const confirmModal = document.getElementById('confirm-modal');
   if (confirmModal) {
@@ -119,5 +137,55 @@ $stmt->close();
           behavior: 'smooth'
         });
       });
+  });
+
+  // AJAX form submission for loaded content (event delegation)
+  // This handler is attached only once to the document.
+  $(document).on("submit", "#account-content form", function(e) {
+    e.preventDefault();
+    let form = $(this);
+    let content = $("#account-content");
+    let currentPage = $("a[data-page].bg-pink-100").data("page") || "profile.php"; // Get current active page or default
+
+    // Show loading state on button
+    let submitButton = form.find('button[type="submit"]');
+    let originalButtonText = submitButton.html();
+    submitButton.html('<i class="fas fa-spinner fa-spin"></i> &nbsp; Đang xử lý...');
+    submitButton.prop('disabled', true);
+
+    $.ajax({
+      type: "POST",
+      url: form.attr("action") || currentPage, // Use form action or current page
+      data: form.serialize(),
+      dataType: 'text', // Expect text first, then check if it's JSON
+      headers: { "X-Requested-With": "XMLHttpRequest" }, // Mark as AJAX request
+      success: function(response, status, xhr) {
+        const isJson = xhr.getResponseHeader('content-type')?.includes('application/json');
+
+        if (isJson) {
+            const data = JSON.parse(response);
+            if (data.success) {
+                showToast(data.message);
+            } else {
+                showToast(data.message, true);
+            }
+            // Restore button state
+            submitButton.html(originalButtonText);
+            submitButton.prop('disabled', false);
+        } else {
+            // Fallback for pages that return HTML (like settings.php)
+            setTimeout(() => {
+                content.html(response);
+                // No need to restore button, content is reloaded
+            }, 500);
+        }
+      },
+      error: function() {
+        showToast("Đã có lỗi xảy ra. Vui lòng thử lại.", true);
+        // Restore button state on error
+        submitButton.html(originalButtonText);
+        submitButton.prop('disabled', false);
+      }
+    });
   });
 </script>
