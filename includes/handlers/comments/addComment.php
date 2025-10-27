@@ -45,8 +45,7 @@ if (!$target_id || !in_array($target_type, ['product', 'blog'])) {
 // 3. Insert into database with 'pending' status
 $sql = "INSERT INTO comments (user_id, target_id, target_type, content, parent_id, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', NOW())";
 $stmt = $conn->prepare($sql);
-// The type for parent_id is 'i' if it's an integer, 's' won't work correctly for NULL.
-// We bind it as an integer.
+// The type for parent_id is 'i'. bind_param handles NULL correctly for integer types.
 $stmt->bind_param('iissi', $user_id, $target_id, $target_type, $content, $parent_id);
 
 if ($stmt->execute()) {
