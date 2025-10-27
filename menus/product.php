@@ -163,265 +163,111 @@ if (isset($_SESSION['user_id'])) {
         }
     </style>
 
+    <script src="<?php echo $base_url; ?>/assets/js/comments.js"></script>
     <script>
-    const loggedInUserId = <?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'null'; ?>;
-
-    // Cập nhật giá khi chọn size
-    setTimeout(function() {
-        document.querySelectorAll('input[name="product_size"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                const basePrice = <?php echo $product['price']; ?>;
-                const extra = parseFloat(this.dataset.extra) || 0;
-                const finalPrice = basePrice + extra;
-                document.getElementById("product-price").innerText = finalPrice.toLocaleString('vi-VN') + " đ";
-            });
-        });
-    }, 100);
-
-    // Toast function
-    function showToast(message, isError = false) {
-        const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toast-message');
-        toastMessage.textContent = message;
-        if (isError) {
-            toast.classList.add('error');
-        } else {
-            toast.classList.remove('error');
-        }
-        toast.classList.add('show');
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, 2500);
-    }
-
-    // Xử lý thêm vào giỏ hàng
-    document.getElementById('add-to-cart-btn').onclick = function() {
-        const productId = <?php echo $product['product_id']; ?>;
-        const sizeRadio = document.querySelector('input[name="product_size"]:checked');
-        const sizeId = sizeRadio ? sizeRadio.value : null;
-        const quantity = 1;
-        fetch('<?php echo $base_url; ?>/customer/cart/add.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `product_id=${productId}&size_id=${sizeId}&quantity=${quantity}`
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                showToast('Đã thêm vào giỏ hàng!');
-                setTimeout(() => { window.location.reload(); }, 800);
-            } else {
-                showToast(data.message, true);
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toast function
+            function showToast(message, isError = false) {
+                const toast = document.getElementById('toast');
+                const toastMessage = document.getElementById('toast-message');
+                toastMessage.textContent = message;
+                if (isError) {
+                    toast.classList.add('error');
+                } else {
+                    toast.classList.remove('error');
+                }
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2500);
             }
-        });
-    };
 
-    // Handle favourite button click
-    const favBtn = document.getElementById('favourite-btn');
-    if (favBtn) {
-        favBtn.addEventListener('click', function() {
-            const productId = this.dataset.productId;
-            const isFavourited = this.classList.contains('bg-pink-600');
-            const url = isFavourited 
-                ? '<?php echo $base_url; ?>/includes/handlers/favourite/removeFavourite.php'
-                : '<?php echo $base_url; ?>/includes/handlers/favourite/addFavourite.php';
-            const formData = new FormData();
-            formData.append('product_id', productId);
-            fetch(url, { method: 'POST', body: formData })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    if (isFavourited) {
-                        this.classList.remove('bg-pink-600', 'text-white');
-                        this.classList.add('bg-gray-200', 'text-gray-700');
-                        this.querySelector('i').classList.replace('fa-heart-circle-check', 'fa-heart');
-                        showToast('Removed from wishlist!');
-                    } else {
-                        this.classList.add('bg-pink-600', 'text-white');
-                        this.classList.remove('bg-gray-200', 'text-gray-700');
-                        this.querySelector('i').classList.replace('fa-heart', 'fa-heart-circle-check');
-                        showToast('Added to wishlist!');
-                    }
-                    setTimeout(() => window.location.reload(), 1000);
-                } else {
-                    showToast(data.message || 'An error occurred.', true);
-                }
-            });
-        });
-    }
-
-    // --- Comments Section Logic ---
-    const commentsContainer = document.getElementById('comments-container');
-    const productId = <?php echo $product['product_id']; ?>;
-
-    function loadComments() {
-        fetch(`<?php echo $base_url; ?>/includes/handlers/comments/getComments.php?target_type=product&target_id=${productId}`)
-            .then(res => res.json())
-            .then(data => {
-                commentsContainer.innerHTML = '';
-                if (data.success && data.comments.length > 0) {
-                    data.comments.forEach(comment => {
-                        const commentElement = document.createElement('div');
-                        commentElement.id = `comment-${comment.id}`;
-                        commentElement.className = 'flex items-start space-x-4 p-4 bg-gray-50 rounded-lg';
-                        
-                        let ownerActions = '';
-                        if (loggedInUserId && comment.user_id == loggedInUserId) {
-                            ownerActions = `
-                                <div class="text-xs">
-                                    <button class="font-semibold text-blue-600 hover:underline edit-comment-btn" data-comment-id="${comment.id}">Edit</button>
-                                    <span class="mx-1">·</span>
-                                    <button class="font-semibold text-red-600 hover:underline delete-comment-btn" data-comment-id="${comment.id}">Delete</button>
-                                </div>
-                            `;
-                        }
-
-                        const likeBtnClass = comment.user_has_liked == 1 ? 'text-pink-500' : 'text-gray-600';
-
-                        commentElement.innerHTML = `
-                            <img src="${comment.user_avatar || '<?php echo $base_url; ?>/customer/Photos/avatar/avatar1.jpg'}" alt="${comment.username}" class="w-12 h-12 rounded-full object-cover">
-                            <div class="flex-1">
-                                <div class="flex justify-between items-center">
-                                    <p class="font-bold text-gray-800">${comment.username}</p>
-                                    <span class="text-xs text-gray-500">${new Date(comment.created_at).toLocaleString('vi-VN')}</span>
-                                </div>
-                                <div class="comment-content text-gray-700 mt-1">${comment.content}</div>
-                                <div class="comment-actions mt-2 flex items-center space-x-4">
-                                    <button class="font-semibold hover:text-pink-500 like-comment-btn ${likeBtnClass}" data-comment-id="${comment.id}">
-                                        <i class="fas fa-thumbs-up"></i>
-                                        <span class="like-count ml-1">${comment.likes}</span>
-                                    </button>
-                                    ${ownerActions}
-                                </div>
-                            </div>
-                        `;
-                        commentsContainer.appendChild(commentElement);
-                    });
-                    addCommentActionListeners();
-                } else {
-                    commentsContainer.innerHTML = '<p class="text-center text-gray-500">Chưa có bình luận nào. Hãy là người đầu tiên!</p>';
-                }
-            });
-    }
-
-    function addCommentActionListeners() {
-        // Like buttons
-        document.querySelectorAll('.like-comment-btn').forEach(btn => {
-            btn.onclick = function() {
-                if (!loggedInUserId) { showToast('Please log in to like comments.', true); return; }
-                const commentId = this.dataset.commentId;
-                const formData = new FormData();
-                formData.append('comment_id', commentId);
-
-                fetch('<?php echo $base_url; ?>/includes/handlers/comments/likeComment.php', { method: 'POST', body: formData })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        this.querySelector('.like-count').innerText = data.new_like_count;
-                        if (data.action === 'liked') {
-                            this.classList.add('text-pink-500');
-                            this.classList.remove('text-gray-600');
-                        } else {
-                            this.classList.remove('text-pink-500');
-                            this.classList.add('text-gray-600');
-                        }
-                    } else {
-                        showToast(data.message, true);
-                    }
+            // Cập nhật giá khi chọn size
+            document.querySelectorAll('input[name="product_size"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const basePrice = <?php echo $product['price']; ?>;
+                    const extra = parseFloat(this.dataset.extra) || 0;
+                    const finalPrice = basePrice + extra;
+                    document.getElementById("product-price").innerText = finalPrice.toLocaleString('vi-VN') + " đ";
                 });
-            };
-        });
+            });
 
-        // Delete buttons
-        document.querySelectorAll('.delete-comment-btn').forEach(btn => {
-            btn.onclick = function() {
-                if (!confirm('Are you sure you want to delete this comment?')) return;
-                const commentId = this.dataset.commentId;
-                const formData = new FormData();
-                formData.append('comment_id', commentId);
-                fetch('<?php echo $base_url; ?>/includes/handlers/comments/deleteComment.php', { method: 'POST', body: formData })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        showToast(data.message);
-                        document.getElementById(`comment-${commentId}`).remove();
-                    } else {
-                        showToast(data.message, true);
+            // Xử lý thêm vào giỏ hàng
+            const addToCartBtn = document.getElementById('add-to-cart-btn');
+            if (addToCartBtn) {
+                addToCartBtn.onclick = function() {
+                    const productId = <?php echo $product['product_id']; ?>;
+                    const sizeRadio = document.querySelector('input[name="product_size"]:checked');
+                    if (!sizeRadio) {
+                        showToast('Vui lòng chọn size sản phẩm.', true);
+                        return;
                     }
-                });
-            };
-        });
-
-        // Edit buttons
-        document.querySelectorAll('.edit-comment-btn').forEach(btn => {
-            btn.onclick = function() {
-                const commentId = this.dataset.commentId;
-                const commentElement = document.getElementById(`comment-${commentId}`);
-                const contentDiv = commentElement.querySelector('.comment-content');
-                const actionsDiv = commentElement.querySelector('.comment-actions');
-                const originalContent = contentDiv.innerText;
-                actionsDiv.style.display = 'none'; // Hide actions while editing
-
-                contentDiv.innerHTML = `
-                    <textarea class="w-full p-2 border rounded-lg text-sm">${originalContent}</textarea>
-                    <div class="text-right mt-2">
-                        <button class="text-xs font-bold text-gray-500 hover:underline cancel-edit-btn">Cancel</button>
-                        <button class="text-xs font-bold text-green-600 hover:underline ml-2 save-edit-btn">Save</button>
-                    </div>
-                `;
-
-                commentElement.querySelector('.cancel-edit-btn').onclick = () => { 
-                    contentDiv.innerHTML = originalContent;
-                    actionsDiv.style.display = 'flex';
+                    const sizeId = sizeRadio.value;
+                    const quantity = 1;
+                    fetch('<?php echo $base_url; ?>/customer/cart/add.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: `product_id=${productId}&size_id=${sizeId}&quantity=${quantity}`
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                showToast('Đã thêm vào giỏ hàng!');
+                                // Cân nhắc reload hoặc cập nhật icon giỏ hàng
+                                setTimeout(() => { window.location.reload(); }, 800);
+                            } else {
+                                showToast(data.message, true);
+                            }
+                        });
                 };
-                commentElement.querySelector('.save-edit-btn').onclick = () => {
-                    const newContent = commentElement.querySelector('textarea').value.trim();
-                    if (!newContent) { showToast('Comment cannot be empty.', true); return; }
+            }
 
+            // Xử lý nút yêu thích
+            const favBtn = document.getElementById('favourite-btn');
+            if (favBtn) {
+                favBtn.addEventListener('click', function() {
+                    const productId = this.dataset.productId;
+                    const isFavourited = this.classList.contains('bg-pink-600');
+                    const url = isFavourited 
+                        ? '<?php echo $base_url; ?>/includes/handlers/favourite/removeFavourite.php'
+                        : '<?php echo $base_url; ?>/includes/handlers/favourite/addFavourite.php';
+                    
                     const formData = new FormData();
-                    formData.append('comment_id', commentId);
-                    formData.append('content', newContent);
+                    formData.append('product_id', productId);
 
-                    fetch('<?php echo $base_url; ?>/includes/handlers/comments/editComment.php', { method: 'POST', body: formData })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            showToast(data.message);
-                            contentDiv.innerHTML = newContent;
-                        } else {
-                            showToast(data.message, true);
-                            contentDiv.innerHTML = originalContent;
-                        }
-                        actionsDiv.style.display = 'flex';
-                    });
-                };
-            };
-        });
-    }
+                    fetch(url, { method: 'POST', body: formData })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                if (isFavourited) {
+                                    this.classList.remove('bg-pink-600', 'text-white');
+                                    this.classList.add('bg-gray-200', 'text-gray-700');
+                                    this.querySelector('i').classList.replace('fa-heart-circle-check', 'fa-heart');
+                                    showToast('Đã xóa khỏi danh sách yêu thích!');
+                                } else {
+                                    this.classList.add('bg-pink-600', 'text-white');
+                                    this.classList.remove('bg-gray-200', 'text-gray-700');
+                                    this.querySelector('i').classList.replace('fa-heart', 'fa-heart-circle-check');
+                                    showToast('Đã thêm vào danh sách yêu thích!');
+                                }
+                            } else {
+                                showToast(data.message || 'Đã có lỗi xảy ra.', true);
+                            }
+                        });
+                });
+            }
 
-    loadComments();
-
-    const commentForm = document.getElementById('comment-form');
-    if (commentForm) {
-        commentForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            const content = formData.get('content').trim();
-            if (!content) { showToast('Vui lòng nhập nội dung bình luận.', true); return; }
-
-            fetch('<?php echo $base_url; ?>/includes/handlers/comments/addComment.php', { method: 'POST', body: formData })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    showToast('Bình luận của bạn đã được gửi và đang chờ duyệt.');
-                    document.getElementById('comment-content').value = '';
-                } else {
-                    showToast(data.message || 'Không thể gửi bình luận.', true);
-                }
+            // Khởi tạo khu vực bình luận
+            initializeCommentsSection({
+                targetType: 'product',
+                targetId: <?php echo $product['product_id']; ?>,
+                loggedInUserId: <?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'null'; ?>,
+                baseUrl: '<?php echo $base_url; ?>',
+                themeColorClass: 'text-pink-500',
+                defaultAvatar: '<?php echo $base_url; ?>/customer/Photos/avatar/avatar1.jpg'
             });
         });
-    }
-</script>
+    </script>
 </body>
 
 </html>
