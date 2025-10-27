@@ -14,6 +14,20 @@ function initializeCommentsSection(config) {
     const commentsContainer = document.getElementById('comments-container');
     const commentForm = document.getElementById('comment-form');
 
+    // --- REACTION CONSTANTS (Moved to higher scope) ---
+    const reactionsMap = {
+        'like': '👍', 'love': '❤️', 'haha': '😂', 'wow': '😮', 'sad': '😢', 'angry': '😠'
+    };
+    const reactionColors = {
+        'like': 'text-blue-500', 'love': 'text-red-500', 'haha': 'text-yellow-500',
+        'wow': 'text-yellow-500', 'sad': 'text-yellow-500', 'angry': 'text-orange-600'
+    };
+    // Function to capitalize first letter
+    function capitalizeFirstLetter(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+    // --- END REACTION CONSTANTS ---
+
     // Một hàm toast nội bộ, có thể được thay thế bằng một hệ thống toast toàn cục sau này.
     function showToast(message, isError = false) {
         const toastId = 'toast-notification';
@@ -83,22 +97,34 @@ function initializeCommentsSection(config) {
             `;
         }
 
-        const likeBtnClass = comment.user_has_liked == 1 ? themeColorClass : 'text-gray-600';
+        // Create reaction summary HTML
+        let reactionSummaryContent = '';
+        if (Object.keys(comment.reactions).length > 0) {
+            reactionSummaryContent = `<div class="reaction-summary absolute -bottom-3 right-2 bg-white rounded-full shadow-md px-2 py-0.5 flex items-center text-xs">`;
+            for (const type in comment.reactions) {
+                reactionSummaryContent += `<span class="mr-1">${reactionsMap[type]} ${comment.reactions[type]}</span>`;
+            }
+            reactionSummaryContent += `</div>`;
+        }
 
         commentElement.innerHTML = `
             <img src="${comment.user_avatar || defaultAvatar}" alt="${comment.username}" class="${avatarSize} rounded-full object-cover">
             <div class="flex-1">
-                <div class="bg-gray-100 rounded-xl p-3">
+                <div class="bg-gray-100 rounded-xl p-3 relative">
                     <div class="flex justify-between items-center">
                         <p class="font-bold text-gray-800 text-sm">${comment.username}</p>
                         <span class="text-xs text-gray-500">${new Date(comment.created_at).toLocaleString('vi-VN')}</span>
                     </div>
                     <div class="comment-content text-gray-700 mt-1 text-sm">${comment.content}</div>
+                    ${reactionSummaryContent}
                 </div>
                 <div class="comment-actions mt-1 flex items-center space-x-3 text-xs px-2">
-                    <button class="font-semibold hover:${themeColorClass} like-comment-btn ${likeBtnClass}" data-comment-id="${comment.id}">
-                        Thích (<span class="like-count">${comment.likes}</span>)
-                    </button>
+                    <div class="reaction-btn-wrapper relative">
+                        <button class="font-semibold react-btn ${comment.user_reaction ? reactionColors[comment.user_reaction] : 'text-gray-600'}" data-comment-id="${comment.id}" data-current-reaction="${comment.user_reaction || ''}">
+                            ${comment.user_reaction ? reactionsMap[comment.user_reaction] + ' ' + capitalizeFirstLetter(comment.user_reaction) : 'Thích'}
+                        </button>
+                        ${createReactionPopup(comment.id)}
+                    </div>
                     <span class="text-gray-400">·</span>
                     <button class="font-semibold text-gray-600 hover:${themeColorClass} reply-comment-btn" data-comment-id="${comment.id}">Trả lời</button>
                     <span class="text-gray-400">·</span>
@@ -125,6 +151,64 @@ function initializeCommentsSection(config) {
         return commentWrapper;
     }
 
+    function createReactionPopup(commentId) {
+        const reactions = { 'like': '👍', 'love': '❤️', 'haha': '😂', 'wow': '😮', 'sad': '😢', 'angry': '😠' };
+        let popupHTML = `<div class="reaction-popup absolute bottom-full left-1/2 -translate-x-1/2 bg-white rounded-full shadow-lg p-1 flex space-x-1 opacity-0 pointer-events-none transition-all duration-200 transform scale-90 z-10">`;
+        for (const type in reactions) {
+            popupHTML += `<button class="reaction-option text-2xl transform hover:scale-125 transition-transform" data-comment-id="${commentId}" data-reaction-type="${type}">${reactions[type]}</button>`;
+        }
+        popupHTML += `</div>`;
+        return popupHTML;
+    }
+
+    /**
+     * Cập nhật giao diện người dùng cho một bình luận cụ thể sau khi có phản ứng.
+     * @param {number} commentId - ID của bình luận.
+     * @param {string|null} currentUserReaction - Loại cảm xúc hiện tại của người dùng (hoặc null nếu đã hủy).
+     * @param {object} allReactions - Đối tượng chứa số lượng của tất cả các loại cảm xúc cho bình luận này.
+     */
+    function updateReactionUI(commentId, currentUserReaction, allReactions) {
+        const commentWrapper = document.getElementById(`comment-wrapper-${commentId}`);
+        if (!commentWrapper) return;
+
+        const reactBtn = commentWrapper.querySelector('.react-btn');
+        const reactionSummaryDiv = commentWrapper.querySelector('.reaction-summary'); // Find the summary div
+
+        // 1. Update the main reaction button
+        // Remove all existing reaction color classes
+        Object.values(reactionColors).forEach(cls => reactBtn.classList.remove(cls));
+
+        if (currentUserReaction) {
+            reactBtn.classList.add(reactionColors[currentUserReaction]);
+            reactBtn.innerHTML = `${reactionsMap[currentUserReaction]} ${capitalizeFirstLetter(currentUserReaction)}`;
+            reactBtn.dataset.currentReaction = currentUserReaction;
+        } else {
+            reactBtn.classList.add('text-gray-600');
+            reactBtn.innerHTML = 'Thích';
+            reactBtn.dataset.currentReaction = '';
+        }
+
+        // 2. Update the reaction summary block
+        if (Object.keys(allReactions).length > 0) {
+            let summaryHTML = '';
+            for (const type in allReactions) {
+                summaryHTML += `<span class="mr-1">${reactionsMap[type]} ${allReactions[type]}</span>`;
+            }
+            if (reactionSummaryDiv) {
+                reactionSummaryDiv.innerHTML = summaryHTML;
+            } else {
+                // If summary div doesn't exist, create and append it
+                const newSummaryDiv = document.createElement('div');
+                newSummaryDiv.className = "reaction-summary absolute -bottom-3 right-2 bg-white rounded-full shadow-md px-2 py-0.5 flex items-center text-xs";
+                newSummaryDiv.innerHTML = summaryHTML;
+                commentWrapper.querySelector('.bg-gray-100').appendChild(newSummaryDiv);
+            }
+        } else if (reactionSummaryDiv) {
+            // If no reactions, remove the summary div
+            reactionSummaryDiv.remove();
+        }
+    }
+
     function createReplyForm(parentId) {
         const form = document.createElement('form');
         form.className = 'reply-form flex items-start space-x-3 ml-10 mt-4';
@@ -143,25 +227,42 @@ function initializeCommentsSection(config) {
     }
 
     function addCommentActionListeners() {
-        document.querySelectorAll('.like-comment-btn').forEach(btn => {
-            btn.onclick = function() {
-                if (!loggedInUserId) { showToast('Vui lòng đăng nhập để thích bình luận.', true); return; }
-                const commentId = this.dataset.commentId;
-                const formData = new FormData();
-                formData.append('comment_id', commentId);
+        // Reaction button hover/click logic
+        document.querySelectorAll('.reaction-btn-wrapper').forEach(wrapper => {
+            const popup = wrapper.querySelector('.reaction-popup');
+            const reactBtn = wrapper.querySelector('.react-btn');
 
-                fetch(`${baseUrl}/includes/handlers/comments/likeComment.php`, { method: 'POST', body: formData })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            this.innerHTML = `Thích (<span class="like-count">${data.new_like_count}</span>)`;                            this.classList.toggle(themeColorClass, data.action === 'liked');
-                            this.classList.toggle('text-gray-600', data.action !== 'liked');
-                        } else {
-                            showToast(data.message, true);
-                        }
-                    });
-            };
+            wrapper.addEventListener('mouseenter', () => {
+                popup.classList.remove('opacity-0', 'pointer-events-none', 'scale-90');
+            });
+            wrapper.addEventListener('mouseleave', () => {
+                popup.classList.add('opacity-0', 'pointer-events-none', 'scale-90');
+            });
+
+            // Default action for the main button is 'like'
+            reactBtn.addEventListener('click', () => {
+                const currentReaction = reactBtn.dataset.currentReaction;
+                // If user already reacted with 'like', clicking again should un-react.
+                // Otherwise, it should react with 'like'.
+                handleReaction(reactBtn.dataset.commentId, currentReaction === 'like' ? currentReaction : 'like');
+            });
         });
+
+
+        function handleReaction(commentId, reactionType) {
+            if (!loggedInUserId) { showToast('Vui lòng đăng nhập để tương tác.', true); return; }
+            const formData = new FormData();
+            formData.append('comment_id', commentId);
+            formData.append('reaction_type', reactionType);
+
+            fetch(`${baseUrl}/includes/handlers/comments/reactComment.php`, { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        updateReactionUI(commentId, data.action === 'unreacted' ? null : reactionType, data.new_reactions); // Pass reactionType for current user
+                    } else { showToast(data.message, true); }
+                });
+        }
 
         document.querySelectorAll('.delete-comment-btn').forEach(btn => {
             btn.onclick = function() {
@@ -187,7 +288,7 @@ function initializeCommentsSection(config) {
                 const commentId = this.dataset.commentId;
                 const commentWrapper = document.getElementById(`comment-wrapper-${commentId}`);
                 const contentDiv = commentWrapper.querySelector('.comment-content');
-                const actionsDiv = commentElement.querySelector('.comment-actions');
+                const actionsDiv = commentWrapper.querySelector('.comment-actions');
                 const originalContent = contentDiv.innerText;
                 actionsDiv.style.display = 'none';
 
@@ -264,6 +365,21 @@ function initializeCommentsSection(config) {
                         });
                 });
             };
+        });
+
+        // Xử lý khi click vào một tùy chọn cảm xúc trong popup
+        document.querySelectorAll('.reaction-option').forEach(option => {
+            option.onclick = () => handleReaction(option.dataset.commentId, option.dataset.reactionType);
+        });
+
+    }
+
+    // Sử dụng Event Delegation cho các hành động trên bình luận
+    if (commentsContainer) {
+        commentsContainer.addEventListener('click', function(e) {
+            const target = e.target;
+            // Xử lý khi click vào một tùy chọn cảm xúc
+            // Logic này đã được chuyển vào addCommentActionListeners để đảm bảo hoạt động với các bình luận được thêm sau.
         });
     }
 

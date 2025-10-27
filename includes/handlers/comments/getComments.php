@@ -18,16 +18,16 @@ if (!$target_id || !in_array($target_type, ['product', 'blog'])) {
     exit;
 }
 
-// Câu SQL để lấy tất cả bình luận và thông tin người dùng, bao gồm cả trạng thái like
+// Câu SQL để lấy tất cả bình luận, thông tin người dùng, và cảm xúc của người dùng hiện tại
 $sql = "
     SELECT 
-        c.id, c.user_id, c.content, c.created_at, c.likes, c.parent_id,
+        c.id, c.user_id, c.content, c.created_at, c.parent_id,
         u.full_name AS username,
         u.avatar_image AS user_avatar,
-        (CASE WHEN cl.id IS NOT NULL THEN 1 ELSE 0 END) AS user_has_liked
+        cr.reaction_type AS user_reaction
     FROM comments c
     JOIN users u ON c.user_id = u.user_id
-    LEFT JOIN comment_likes cl ON c.id = cl.comment_id AND cl.user_id = ?
+    LEFT JOIN comment_reactions cr ON c.id = cr.comment_id AND cr.user_id = ?
     WHERE c.target_type = ? AND c.target_id = ? AND c.status = 'approved'
     ORDER BY c.created_at ASC
 ";
@@ -39,6 +39,23 @@ $result = $stmt->get_result();
 $all_comments = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
+// Lấy số lượng của từng loại cảm xúc cho tất cả các bình luận được hiển thị
+$comment_ids = array_column($all_comments, 'id');
+$reactions = [];
+if (!empty($comment_ids)) {
+    $ids_placeholder = implode(',', array_fill(0, count($comment_ids), '?'));
+    $types = str_repeat('i', count($comment_ids));
+    $reaction_sql = "SELECT comment_id, reaction_type, COUNT(*) as count FROM comment_reactions WHERE comment_id IN ($ids_placeholder) GROUP BY comment_id, reaction_type";
+    $reaction_stmt = $conn->prepare($reaction_sql);
+    $reaction_stmt->bind_param($types, ...$comment_ids);
+    $reaction_stmt->execute();
+    $reaction_result = $reaction_stmt->get_result();
+    while ($row = $reaction_result->fetch_assoc()) {
+        $reactions[$row['comment_id']][$row['reaction_type']] = $row['count'];
+    }
+    $reaction_stmt->close();
+}
+
 // Sắp xếp bình luận thành cây phân cấp (cha-con)
 $comments_by_id = [];
 foreach ($all_comments as &$comment) { // Dùng tham chiếu để cập nhật avatar
@@ -47,6 +64,7 @@ foreach ($all_comments as &$comment) { // Dùng tham chiếu để cập nhật 
     } else {
         $comment['user_avatar'] = $base_url . '/customer/Photos/avatar/avatar1.jpg';
     }
+    $comment['reactions'] = $reactions[$comment['id']] ?? []; // Gán dữ liệu reactions
     $comments_by_id[$comment['id']] = $comment;
     $comments_by_id[$comment['id']]['replies'] = []; // Khởi tạo mảng replies
 }
