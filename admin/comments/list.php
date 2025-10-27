@@ -1,6 +1,6 @@
 <?php
 include_once __DIR__ . '/../../database/db_connection.php';
-include_once __DIR__ . '/../../config.php';
+include_once __DIR__ . '/../../config.php'; // For $base_url
 include_once __DIR__ . '/../../menus/helper.php';
 
 // --- Filtering & Pagination Logic ---
@@ -108,8 +108,8 @@ function get_target_link($comment, $base_url)
 }
 ?>
 
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">Quản lý Bình luận</h1>
+<div class="bg-white rounded-3xl shadow-xl p-8">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2"><i class="fa fa-comments text-green-500"></i> Quản lý Bình luận</h1>
 
     <!-- Filter Form -->
     <form method="GET" class="bg-white p-4 rounded-lg shadow-md mb-6">
@@ -136,18 +136,18 @@ function get_target_link($comment, $base_url)
                 </select>
             </div>
             <div class="self-end">
-                <button type="submit" class="w-full bg-pink-600 text-white py-2 px-4 rounded-md hover:bg-pink-700 font-semibold">Lọc</button>
+                <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 font-semibold">Lọc</button>
             </div>
         </div>
     </form>
 
     <!-- Comments Table -->
-    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+    <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
+            <thead class="bg-green-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Người dùng</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nội dung</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-green-700 uppercase tracking-wider">Người dùng</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-green-700 uppercase tracking-wider">Nội dung</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Đối tượng</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày gửi</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
@@ -156,25 +156,29 @@ function get_target_link($comment, $base_url)
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 <?php if (empty($comments)) : ?>
-                    <tr>
+                    <tr class="fade-in">
                         <td colspan="6" class="px-6 py-4 text-center text-gray-500">Không tìm thấy bình luận nào.</td>
                     </tr>
                 <?php else : ?>
                     <?php foreach ($comments as $comment) : ?>
-                        <tr id="comment-row-<?php echo $comment['id']; ?>">
+                        <tr id="comment-row-<?php echo $comment['id']; ?>" class="hover:bg-green-50 transition-colors duration-200">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><?php echo htmlspecialchars($comment['user_name']); ?></td>
                             <td class="px-6 py-4 text-sm text-gray-700 max-w-xs truncate" title="<?php echo htmlspecialchars($comment['content']); ?>"><?php echo htmlspecialchars($comment['content']); ?></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo get_target_link($comment, $base_url); ?></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo date('d/m/Y H:i', strtotime($comment['created_at'])); ?></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm" id="status-cell-<?php echo $comment['id']; ?>"><?php echo get_status_badge($comment['status']); ?></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" id="action-cell-<?php echo $comment['id']; ?>">
                                 <?php if ($comment['status'] === 'pending') : ?>
-                                    <button onclick="updateCommentStatus(<?php echo $comment['id']; ?>, 'approved')" class="text-green-600 hover:text-green-900">Duyệt</button>
+                                    <button onclick="updateCommentStatus(<?php echo $comment['id']; ?>, 'approved')" class="text-green-600 hover:text-green-900 font-semibold">Duyệt</button>
                                     <span class="mx-1 text-gray-300">|</span>
-                                    <button onclick="updateCommentStatus(<?php echo $comment['id']; ?>, 'rejected')" class="text-yellow-600 hover:text-yellow-900">Từ chối</button>
+                                    <button onclick="updateCommentStatus(<?php echo $comment['id']; ?>, 'rejected')" class="text-yellow-600 hover:text-yellow-900 font-semibold">Từ chối</button>
                                 <?php elseif ($comment['status'] === 'approved') : ?>
-                                    <button onclick="updateCommentStatus(<?php echo $comment['id']; ?>, 'rejected')" class="text-yellow-600 hover:text-yellow-900">Ẩn</button>
+                                    <button onclick="updateCommentStatus(<?php echo $comment['id']; ?>, 'rejected')" class="text-yellow-600 hover:text-yellow-900 font-semibold">Ẩn</button>
+                                <?php elseif ($comment['status'] === 'rejected') : ?>
+                                    <button onclick="updateCommentStatus(<?php echo $comment['id']; ?>, 'approved')" class="text-green-600 hover:text-green-900 font-semibold">Duyệt lại</button>
                                 <?php endif; ?>
+                                <span class="mx-1 text-gray-300">|</span>
+                                <button onclick="editComment(<?php echo $comment['id']; ?>)" class="text-blue-600 hover:text-blue-900">Sửa</button>
                                 <span class="mx-1 text-gray-300">|</span>
                                 <button onclick="deleteComment(<?php echo $comment['id']; ?>)" class="text-red-600 hover:text-red-900">Xóa</button>
                             </td>
@@ -190,16 +194,22 @@ function get_target_link($comment, $base_url)
         <span class="text-sm text-gray-700">
             Hiển thị từ <span class="font-medium"><?php echo min($offset + 1, $total_comments); ?></span> đến <span class="font-medium"><?php echo min($offset + $limit, $total_comments); ?></span> trong tổng số <span class="font-medium"><?php echo $total_comments; ?></span> bình luận
         </span>
-        <div class="flex">
+        <nav class="flex">
             <?php if ($total_pages > 1) : ?>
                 <?php
                 // Build query string for pagination links
                 $query_params = $_GET;
+                unset($query_params['page']); // Remove old page param
                 ?>
-                <a href="?<?php echo http_build_query(array_merge($query_params, ['page' => $page - 1])); ?>" class="px-3 py-1 border rounded-l-md <?php echo $page <= 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white hover:bg-gray-50'; ?>">
+                <a href="#" data-page="comments/list.php?<?php echo http_build_query(array_merge($query_params, ['page' => $page - 1])); ?>" class="px-3 py-1 border rounded-l-md <?php echo $page <= 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white hover:bg-gray-50'; ?>">
                     Trước
                 </a>
-                <a href="?<?php echo http_build_query(array_merge($query_params, ['page' => $page + 1])); ?>" class="px-3 py-1 border-t border-b border-r rounded-r-md <?php echo $page >= $total_pages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white hover:bg-gray-50'; ?>">
+                <?php for ($i = 1; $i <= $total_pages; $i++) : ?>
+                    <a href="#" data-page="comments/list.php?<?php echo http_build_query(array_merge($query_params, ['page' => $i])); ?>" class="px-3 py-1 border-t border-b <?php echo $i == $page ? 'bg-green-500 text-white' : 'bg-white hover:bg-gray-50'; ?>">
+                        <?php echo $i; ?>
+                    </a>
+                <?php endfor; ?>
+                <a href="#" data-page="comments/list.php?<?php echo http_build_query(array_merge($query_params, ['page' => $page + 1])); ?>" class="px-3 py-1 border rounded-r-md <?php echo $page >= $total_pages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white hover:bg-gray-50'; ?>">
                     Sau
                 </a>
             <?php endif; ?>
@@ -208,16 +218,33 @@ function get_target_link($comment, $base_url)
 </div>
 
 <script>
+    const BASE_URL = '<?php echo $base_url; ?>';
+
     function updateCommentStatus(commentId, newStatus) {
-        if (!confirm(`Bạn có chắc muốn ${newStatus === 'approved' ? 'duyệt' : (newStatus === 'rejected' ? 'từ chối/ẩn' : 'cập nhật')} bình luận này?`)) {
-            return;
+        let title = '';
+        let text = '';
+        let confirmButtonText = '';
+
+        if (newStatus === 'approved') {
+            title = 'Duyệt bình luận?';
+            text = 'Bạn có chắc muốn duyệt bình luận này? Nó sẽ hiển thị công khai.';
+            confirmButtonText = 'Duyệt ngay!';
+        } else if (newStatus === 'rejected') {
+            title = 'Ẩn/Từ chối bình luận?';
+            text = 'Bạn có chắc muốn ẩn hoặc từ chối bình luận này? Nó sẽ không hiển thị công khai.';
+            confirmButtonText = 'Ẩn/Từ chối!';
+        } else { // pending, or other status
+            title = 'Cập nhật trạng thái bình luận?';
+            text = 'Bạn có chắc muốn cập nhật trạng thái bình luận này?';
+            confirmButtonText = 'Cập nhật!';
         }
 
+        showConfirmationModal(title, text, confirmButtonText, () => {
         const formData = new FormData();
         formData.append('comment_id', commentId);
         formData.append('status', newStatus);
 
-        fetch('admin/comments/update_status.php', {
+        fetch(`${BASE_URL}/admin/comments/update_status.php`, {
                 method: 'POST',
                 body: formData
             })
@@ -227,41 +254,52 @@ function get_target_link($comment, $base_url)
                     showToast('Cập nhật trạng thái thành công!', 'success');
                     // Cập nhật giao diện trực tiếp thay vì tải lại
                     const statusCell = document.getElementById(`status-cell-${commentId}`);
-                    const actionCell = statusCell.nextElementSibling;
+                    const actionCell = document.getElementById(`action-cell-${commentId}`);
 
                     // Cập nhật badge trạng thái
                     if (newStatus === 'approved') {
                         statusCell.innerHTML = '<span class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full">Đã duyệt</span>';
-                        actionCell.innerHTML = `<button onclick="updateCommentStatus(${commentId}, 'rejected')" class="text-yellow-600 hover:text-yellow-900">Ẩn</button>
+                        actionCell.innerHTML = `<button onclick="updateCommentStatus(${commentId}, 'rejected')" class="text-yellow-600 hover:text-yellow-900 font-semibold">Ẩn</button>
+                                                <span class="mx-1 text-gray-300">|</span>
+                                                <button onclick="editComment(${commentId})" class="text-blue-600 hover:text-blue-900">Sửa</button>
                                                 <span class="mx-1 text-gray-300">|</span>
                                                 <button onclick="deleteComment(${commentId})" class="text-red-600 hover:text-red-900">Xóa</button>`;
                     } else if (newStatus === 'rejected') {
                         statusCell.innerHTML = '<span class="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full">Bị từ chối</span>';
-                        actionCell.innerHTML = `<button onclick="updateCommentStatus(${commentId}, 'approved')" class="text-green-600 hover:text-green-900">Duyệt</button>
+                        actionCell.innerHTML = `<button onclick="updateCommentStatus(${commentId}, 'approved')" class="text-green-600 hover:text-green-900 font-semibold">Duyệt lại</button>
+                                                <span class="mx-1 text-gray-300">|</span>
+                                                <button onclick="editComment(${commentId})" class="text-blue-600 hover:text-blue-900">Sửa</button>
                                                 <span class="mx-1 text-gray-300">|</span>
                                                 <button onclick="deleteComment(${commentId})" class="text-red-600 hover:text-red-900">Xóa</button>`;
                     } else { // pending
                         statusCell.innerHTML = '<span class="bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full">Chờ duyệt</span>';
-                        actionCell.innerHTML = `<button onclick="updateCommentStatus(${commentId}, 'approved')" class="text-green-600 hover:text-green-900">Duyệt</button>
+                        actionCell.innerHTML = `<button onclick="updateCommentStatus(${commentId}, 'approved')" class="text-green-600 hover:text-green-900 font-semibold">Duyệt</button>
                                                 <span class="mx-1 text-gray-300">|</span>
-                                                <button onclick="updateCommentStatus(${commentId}, 'rejected')" class="text-yellow-600 hover:text-yellow-900">Từ chối</button>`;
+                                                <button onclick="updateCommentStatus(${commentId}, 'rejected')" class="text-yellow-600 hover:text-yellow-900 font-semibold">Từ chối</button>`;
+                        actionCell.innerHTML += `<span class="mx-1 text-gray-300">|</span>
+                                                 <button onclick="editComment(${commentId})" class="text-blue-600 hover:text-blue-900">Sửa</button>
+                                                 <span class="mx-1 text-gray-300">|</span>
+                                                 <button onclick="deleteComment(${commentId})" class="text-red-600 hover:text-red-900">Xóa</button>`;
                     }
                 } else {
                     showToast(data.message || 'Có lỗi xảy ra.', 'error');
                 }
             })
             .catch(() => showToast('Lỗi kết nối.', 'error'));
+        });
     }
 
     function deleteComment(commentId) {
-        if (!confirm('Bạn có chắc chắn muốn XÓA vĩnh viễn bình luận này? Hành động này không thể hoàn tác.')) {
-            return;
-        }
+        showConfirmationModal(
+            'Xóa bình luận?',
+            'Bạn có chắc chắn muốn XÓA vĩnh viễn bình luận này? Hành động này không thể hoàn tác.',
+            'Vâng, xóa nó!',
+            () => {
 
         const formData = new FormData();
         formData.append('comment_id', commentId);
 
-        fetch('includes/handlers/comments/deleteComment.php', {
+        fetch(`${BASE_URL}/includes/handlers/comments/deleteComment.php`, {
                 method: 'POST',
                 body: formData
             })
@@ -271,7 +309,8 @@ function get_target_link($comment, $base_url)
                     showToast('Đã xóa bình luận thành công!', 'success');
                     const row = document.getElementById(`comment-row-${commentId}`);
                     if (row) {
-                        row.style.opacity = 0;
+                        row.style.transition = 'opacity 0.5s';
+                        row.style.opacity = '0';
                         setTimeout(() => row.remove(), 500);
                     }
                 } else {
@@ -279,5 +318,77 @@ function get_target_link($comment, $base_url)
                 }
             })
             .catch(() => showToast('Lỗi kết nối.', 'error'));
+            }
+        );
+    }
+
+    function editComment(commentId) {
+        const row = document.getElementById(`comment-row-${commentId}`);
+        const contentCell = row.querySelector('td:nth-child(2)'); // Ô chứa nội dung
+        const currentContent = contentCell.title; // Lấy nội dung đầy đủ từ thuộc tính title
+
+        Swal.fire({
+            title: 'Chỉnh sửa bình luận',
+            html: `<textarea id="swal-edit-content" class="swal2-textarea" style="width: 100%; height: 200px; font-size: 1rem; border-radius: 8px; border: 1px solid #ddd; padding: 10px;">${currentContent}</textarea>`,
+            confirmButtonText: 'Lưu thay đổi',
+            confirmButtonColor: '#2563EB', // blue-600
+            showCancelButton: true,
+            cancelButtonText: 'Hủy',
+            customClass: {
+                popup: 'rounded-2xl'
+            },
+            preConfirm: () => {
+                const newContent = document.getElementById('swal-edit-content').value;
+                if (!newContent.trim()) {
+                    Swal.showValidationMessage(`Nội dung không được để trống`);
+                }
+                return newContent;
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const newContent = result.value;
+                saveComment(commentId, newContent);
+            }
+        });
+    }
+
+    function saveComment(commentId, newContent) {
+        if (!newContent) {
+            showToast('Nội dung không được để trống.', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('comment_id', commentId);
+        formData.append('content', newContent);
+
+        fetch(`${BASE_URL}/includes/handlers/comments/editComment.php`, {
+            method: 'POST',
+            body: formData
+        }).then(res => res.json()).then(data => {
+            if (data.success) {
+                showToast(data.message, 'success');
+                // Cập nhật giao diện trực tiếp thay vì tải lại toàn bộ trang
+                const contentCell = document.querySelector(`#comment-row-${commentId} td:nth-child(2)`);
+                const statusCell = document.getElementById(`status-cell-${commentId}`);
+                const actionCell = document.getElementById(`action-cell-${commentId}`);
+
+                // Cập nhật nội dung
+                contentCell.innerText = newContent;
+                contentCell.title = newContent;
+
+                // Cập nhật trạng thái sang "Chờ duyệt"
+                statusCell.innerHTML = '<span class="bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full">Chờ duyệt</span>';
+                actionCell.innerHTML = `<button onclick="updateCommentStatus(${commentId}, 'approved')" class="text-green-600 hover:text-green-900 font-semibold">Duyệt</button>
+                                        <span class="mx-1 text-gray-300">|</span>
+                                        <button onclick="updateCommentStatus(${commentId}, 'rejected')" class="text-yellow-600 hover:text-yellow-900 font-semibold">Từ chối</button>
+                                        <span class="mx-1 text-gray-300">|</span>
+                                        <button onclick="editComment(${commentId})" class="text-blue-600 hover:text-blue-900">Sửa</button>
+                                        <span class="mx-1 text-gray-300">|</span>
+                                        <button onclick="deleteComment(${commentId})" class="text-red-600 hover:text-red-900">Xóa</button>`;
+            } else {
+                showToast(data.message || 'Có lỗi xảy ra.', 'error');
+            }
+        }).catch(() => showToast('Lỗi kết nối.', 'error'));
     }
 </script>

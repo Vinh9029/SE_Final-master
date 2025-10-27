@@ -164,10 +164,16 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
           fetch(this.getAttribute('data-page'))
             .then(res => res.text())
             .then(html => {
-              setTimeout(() => {
-                const tempDiv = document.createElement('div'); tempDiv.innerHTML = html;
-                mainContent.innerHTML = html;
-                bindAjaxLinks();
+              setTimeout(() => { // Thêm độ trễ nhỏ để tạo hiệu ứng mượt mà
+                mainContent.innerHTML = ''; // Xóa nội dung cũ trước
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                // Chuyển tất cả các node con từ tempDiv sang mainContent
+                while (tempDiv.firstChild) {
+                    mainContent.appendChild(tempDiv.firstChild);
+                }
+                executeInlineScripts(mainContent); // Chạy lại các script
+                bindAjaxLinks(); // Gắn lại các sự kiện cho link và form
               }, 400);
               window.scrollTo({ top: mainContent.offsetTop - 80, behavior: 'smooth' });
             });
