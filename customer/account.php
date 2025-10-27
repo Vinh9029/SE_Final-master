@@ -41,7 +41,6 @@ $stmt->close();
           <li><a href="#" data-page="profile.php" class="block px-4 py-2 rounded-xl font-semibold text-gray-700 hover:bg-pink-100 transition flex items-center group"><i class="fa fa-user mr-2 text-pink-500"></i> Thông tin cá nhân</a></li>
           <li><a href="#" data-page="orders.php" class="block px-4 py-2 rounded-xl font-semibold text-gray-700 hover:bg-orange-100 transition flex items-center group"><i class="fa fa-box mr-2 text-orange-500"></i> Đơn hàng</a></li>
           <li><a href="#" data-page="vouchers.php" class="block px-4 py-2 rounded-xl font-semibold text-gray-700 hover:bg-green-100 transition flex items-center group"><i class="fa fa-ticket-alt mr-2 text-green-500"></i> Voucher của tôi</a></li>
-          <li><a href="#" data-page="favourites.php" class="block px-4 py-2 rounded-xl font-semibold text-gray-700 hover:bg-red-100 transition flex items-center group"><i class="fa fa-heart mr-2 text-red-500"></i> Sản phẩm yêu thích</a></li>
           <li><a href="#" data-page="comments.php" class="block px-4 py-2 rounded-xl font-semibold text-gray-700 hover:bg-purple-100 transition flex items-center group"><i class="fa fa-comments mr-2 text-purple-500"></i> Bình luận của tôi</a></li>
           <li><a href="#" data-page="settings.php" class="block px-4 py-2 rounded-xl font-semibold text-gray-700 hover:bg-yellow-100 transition flex items-center group"><i class="fa fa-cog mr-2 text-yellow-500"></i> Cài đặt tài khoản</a></li>
           <li><a href="logout.php" class="block px-4 py-2 rounded-xl font-semibold text-gray-700 hover:bg-red-100 transition flex items-center group"><i class="fa fa-sign-out-alt mr-2 text-red-500"></i> Đăng xuất</a></li>
@@ -62,9 +61,35 @@ $stmt->close();
   </div>
 </main>
 
+<!-- Global Confirmation Modal -->
+<div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 transition-opacity duration-300 opacity-0" style="display: none;">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md text-center transform scale-95 transition-all duration-300">
+        <div class="mb-4">
+            <i class="fas fa-question-circle text-pink-500 text-5xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-800 mb-4">Bạn có chắc chắn?</h3>
+        <p id="confirm-modal-message" class="text-gray-600 mb-8"></p>
+        <div class="flex justify-center gap-4">
+            <button id="confirm-modal-cancel" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 py-3 rounded-full font-bold transition-colors">Hủy bỏ</button>
+            <button id="confirm-modal-confirm" class="bg-pink-600 hover:bg-pink-700 text-white px-8 py-3 rounded-full font-bold transition-colors">Xác nhận</button>
+        </div>
+    </div>
+</div>
+
+
 <?php include '../includes/footer.php'; ?>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+  // --- Global Modal Logic ---
+  const confirmModal = document.getElementById('confirm-modal');
+  if (confirmModal) {
+    const cancelBtn = document.getElementById('confirm-modal-cancel');
+    cancelBtn.onclick = () => {
+      confirmModal.style.display = 'none';
+      confirmModal.classList.add('opacity-0', 'scale-95');
+    };
+  }
+
   // Khi load account.php có tham số ?page=...
   $(document).ready(function() {
     var page = "<?php echo isset($_GET['page']) ? $_GET['page'] : ''; ?>";

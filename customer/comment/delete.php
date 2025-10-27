@@ -4,26 +4,28 @@ session_start();
 
 header('Content-Type: application/json');
 
-// Check if admin is logged in
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    echo json_encode(['success' => false, 'message' => 'Unauthorized access.']);
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    echo json_encode(['success' => false, 'message' => 'Vui lòng đăng nhập để thực hiện hành động này.']);
     exit;
 }
 
+$user_id = $_SESSION['user_id'];
 $comment_id = $_POST['comment_id'] ?? null;
 
 if (!$comment_id) {
-    echo json_encode(['success' => false, 'message' => 'Invalid comment ID.']);
+    echo json_encode(['success' => false, 'message' => 'ID bình luận không hợp lệ.']);
     exit;
 }
 
-$stmt = $conn->prepare("DELETE FROM comments WHERE id = ?");
-$stmt->bind_param('i', $comment_id);
+// A user can only delete their own comments.
+$stmt = $conn->prepare("DELETE FROM comments WHERE id = ? AND user_id = ?");
+$stmt->bind_param('ii', $comment_id, $user_id);
 
 if ($stmt->execute()) {
-    echo json_encode(['success' => true, 'message' => 'Comment deleted successfully.']);
+    echo json_encode(['success' => true, 'message' => 'Đã xóa bình luận thành công.']);
 } else {
-    echo json_encode(['success' => false, 'message' => 'Failed to delete comment.']);
+    echo json_encode(['success' => false, 'message' => 'Không thể xóa bình luận.']);
 }
 
 $stmt->close();
