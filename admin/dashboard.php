@@ -268,13 +268,13 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
           const form = this;
           const method = form.method.toLowerCase();
 
-          // Xử lý cho form Lọc (GET) của trang sales.php
+          // Xử lý cho các form Lọc (GET)
           if (method === 'get' && form.querySelector('button[type="submit"]').innerText === 'Lọc') {
               const formData = new FormData(form);
               const params = new URLSearchParams(formData);
               // Lấy data-page từ link sidebar đang active để biết trang cần tải lại
               const activeLink = document.querySelector('aside nav a.bg-pink-200');
-              const pageUrl = activeLink ? activeLink.getAttribute('data-page') : 'reports/sales.php'; // Mặc định là sales.php nếu không tìm thấy
+              const pageUrl = activeLink ? activeLink.getAttribute('data-page') : 'products/list.php'; // Fallback
               const fullUrl = `${pageUrl}?${params.toString()}`;
 
               mainContent.innerHTML = `<div class='flex flex-col items-center justify-center h-full'><div class='animate-pulse w-24 h-24 bg-pink-100 rounded-full mb-6'></div><div class='text-center text-gray-400 mt-10'><i class='fa fa-spinner fa-spin text-4xl mb-4'></i><div class='font-bold text-lg'>Đang lọc...</div></div></div>`;

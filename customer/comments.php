@@ -4,7 +4,6 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 include_once __DIR__ . '/../config.php';
-// header.php is already included in account.php which loads this file.
 include_once __DIR__ . '/../database/db_connection.php';
 include_once __DIR__ . '/../menus/helper.php'; // For generateSlug
 
@@ -52,12 +51,12 @@ $stmt->close();
 
 ?>
 
-<div class="bg-purple-50 rounded-3xl shadow-xl p-8 max-w-4xl mx-auto my-8">
+<div class="bg-purple-50 rounded-3xl shadow-xl p-8 h-full flex flex-col">
     <div class="font-bold text-2xl text-purple-600 mb-6 flex items-center gap-3">
         <i class="fa fa-comments text-purple-500"></i> Bình luận của tôi
     </div>
 
-    <div class="space-y-6">
+    <div class="flex-grow overflow-x-auto">
         <?php if (empty($comments)) : ?>
             <div class="text-center py-12 text-gray-500">
                 <i class="fas fa-comment-slash fa-3x text-gray-300 mb-4"></i>
@@ -65,48 +64,56 @@ $stmt->close();
                 <a href="<?php echo $base_url; ?>/menus/menus.php" class="mt-4 inline-block text-purple-600 font-semibold hover:underline">Khám phá sản phẩm và để lại cảm nhận nhé!</a>
             </div>
         <?php else : ?>
-            <?php foreach ($comments as $comment) : ?>
-                <?php
-                $target_name = '';
-                $target_url = '#';
-                $target_image = $base_url . '/Photos/placeholder.png';
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-purple-100 text-purple-800">
+                        <th class="px-4 py-3 rounded-tl-xl">Nội dung</th>
+                        <th class="px-4 py-3">Đối tượng</th>
+                        <th class="px-4 py-3">Ngày gửi</th>
+                        <th class="px-4 py-3">Trạng thái</th>
+                        <th class="px-4 py-3 rounded-tr-xl">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white">
+                    <?php foreach ($comments as $comment) : ?>
+                        <?php
+                        $target_name = '';
+                        $target_url = '#';
 
-                if ($comment['target_type'] === 'product' && $comment['product_name']) {
-                    $target_name = $comment['product_name'];
-                    $target_url = $base_url . '/menus/product.php?slug=' . generateSlug($target_name);
-                    if ($comment['product_image']) $target_image = $base_url . '/' . $comment['product_image'];
-                } elseif ($comment['target_type'] === 'blog' && $comment['blog_title']) {
-                    $target_name = $comment['blog_title'];
-                    $target_url = $base_url . '/pages/blogs/detail.php?slug=' . $comment['blog_slug'];
-                    if ($comment['blog_image']) $target_image = $base_url . '/' . $comment['blog_image'];
-                }
-                list($status_text, $status_class) = get_comment_status_label($comment['status']);
-                ?>
-                <div id="my-comment-<?php echo $comment['id']; ?>" class="bg-white p-5 rounded-xl shadow-md border-l-4 border-purple-300 hover:shadow-lg transition-shadow duration-300">
-                    <div class="flex gap-4">
-                        <img src="<?php echo htmlspecialchars($target_image); ?>" alt="<?php echo htmlspecialchars($target_name); ?>" class="w-20 h-20 object-cover rounded-lg flex-shrink-0">
-                        <div class="flex-1">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <p class="text-xs text-gray-500">Bạn đã bình luận về:</p>
-                                    <a href="<?php echo $target_url; ?>" class="font-bold text-purple-700 hover:underline"><?php echo htmlspecialchars($target_name); ?></a>
+                        if ($comment['target_type'] === 'product' && $comment['product_name']) {
+                            $target_name = $comment['product_name'];
+                            $target_url = $base_url . '/menus/product.php?slug=' . generateSlug($target_name);
+                        } elseif ($comment['target_type'] === 'blog' && $comment['blog_title']) {
+                            $target_name = $comment['blog_title'];
+                            $target_url = $base_url . '/pages/blogs/detail.php?slug=' . $comment['blog_slug'];
+                        }
+                        list($status_text, $status_class) = get_comment_status_label($comment['status']);
+                        ?>
+                        <tr id="my-comment-<?php echo $comment['id']; ?>" class="hover:bg-purple-50 border-b border-purple-100 last:border-b-0">
+                            <td class="px-4 py-3 text-gray-700 max-w-sm">
+                                <p class="truncate" title="<?php echo htmlspecialchars($comment['content']); ?>"><?php echo htmlspecialchars($comment['content']); ?></p>
+                                <div class="text-xs text-gray-400 mt-1">
+                                    <i class="fas fa-thumbs-up text-purple-400"></i> <?php echo $comment['likes']; ?>
                                 </div>
-                                <span class="text-xs text-gray-400"><?php echo date('d/m/Y H:i', strtotime($comment['created_at'])); ?></span>
-                            </div>
-                            <p class="text-gray-800 bg-gray-50 p-3 rounded-md">"<?php echo nl2br(htmlspecialchars($comment['content'])); ?>"</p>
-                            <div class="mt-3 flex items-center justify-between text-sm">
-                                <div class="flex items-center gap-4 text-gray-500">
-                                    <span><i class="fas fa-thumbs-up text-purple-400"></i> <?php echo $comment['likes']; ?> Lượt thích</span>
-                                    <button onclick="deleteMyComment(<?php echo $comment['id']; ?>)" class="text-red-500 hover:text-red-700 hover:underline font-semibold flex items-center gap-1">
-                                        <i class="fas fa-trash-alt"></i> Xóa
-                                    </button>
-                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <a href="<?php echo $target_url; ?>" target="_blank" class="text-purple-700 hover:underline font-semibold text-sm truncate block" title="<?php echo htmlspecialchars($target_name); ?>">
+                                    <?php echo htmlspecialchars($target_name); ?>
+                                </a>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-500"><?php echo date('d/m/Y', strtotime($comment['created_at'])); ?></td>
+                            <td class="px-4 py-3">
                                 <span class="<?php echo $status_class; ?> px-2 py-1 rounded-full font-bold text-xs"><?php echo $status_text; ?></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
+                            </td>
+                            <td class="px-4 py-3">
+                                <button onclick="deleteMyComment(<?php echo $comment['id']; ?>)" class="text-red-500 hover:text-red-700 font-semibold flex items-center gap-1 text-sm" title="Xóa bình luận">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         <?php endif; ?>
     </div>
 </div>
@@ -144,7 +151,13 @@ $stmt->close();
             .then(data => {
                 if (data.success) {
                     showAccountToast('Đã xóa bình luận thành công!', false);
-                    document.getElementById(`my-comment-${commentId}`).remove();
+                    const row = document.getElementById(`my-comment-${commentId}`);
+                    if (row) {
+                        row.style.transition = 'opacity 0.5s, transform 0.5s';
+                        row.style.opacity = '0';
+                        row.style.transform = 'scale(0.95)';
+                        setTimeout(() => row.remove(), 500);
+                    }
                 } else {
                     showAccountToast(data.message || 'Có lỗi xảy ra.', true);
                 }
