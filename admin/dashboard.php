@@ -1,4 +1,7 @@
 <?php
+include_once __DIR__ . '/admin_auth.php'; // Kiểm tra quyền truy cập của admin
+// --- END AUTH CHECK ---
+
 include_once '../database/db_connection.php';
 
 // Fetch dynamic stats

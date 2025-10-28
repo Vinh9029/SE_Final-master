@@ -1,8 +1,8 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-// session_start();
-// include_once __DIR__ . '/../database/db_connection.php';
+session_start();
+include_once __DIR__ . '/../database/db_connection.php';
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -150,32 +150,41 @@ ini_set('display_errors', 1);
         </div>
     </section>
 
-    <!-- Menu Section -->
-    <section id="menu" class="py-20 bg-4B2E05 text-white parallax" style="background-image: url('../Photos/background.jpg'); background-attachment: fixed;">
+    <!-- Menu Nổi Bật Section - Redesigned -->
+    <section id="menu" class="py-20 section-bg">
         <div class="max-w-6xl mx-auto px-4">
             <div class="text-center mb-12">
-                <h2 class="text-4xl font-bold mb-4">Menu Nổi Bật</h2>
-                <p class="text-lg">Khám phá những hương vị signature của chúng tôi</p>
+                <h2 class="text-4xl font-bold text-4B2E05 mb-4">Hương Vị Signature</h2>
+                <p class="text-lg text-gray-700">Những tuyệt tác được yêu thích nhất tại The Old Flavour.</p>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="bg-white text-222222 rounded-xl shadow-lg p-6 card-hover">
-                    <img src="../Photos/test1.jpg" alt="Espresso" class="w-full h-48 object-cover rounded-lg mb-4">
-                    <h3 class="text-xl font-bold mb-2">Espresso Cổ Điển</h3>
-                    <p class="text-sm">Vị đắng tinh tế, hương thơm nồng nàn.</p>
+                <!-- Card 1 -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden card-hover">
+                    <img src="../Photos/menus/caphe/ca-phe-muoi.jpg" alt="Cà Phê Muối" class="w-full h-56 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold text-4B2E05 mb-2">Cà Phê Muối</h3>
+                        <p class="text-gray-600">Sự hòa quyện độc đáo giữa vị đắng cà phê và lớp kem muối béo ngậy, tạo nên một trải nghiệm khó quên.</p>
+                    </div>
                 </div>
-                <div class="bg-white text-222222 rounded-xl shadow-lg p-6 card-hover">
-                    <img src="../Photos/test2.jpg" alt="Cold Brew" class="w-full h-48 object-cover rounded-lg mb-4">
-                    <h3 class="text-xl font-bold mb-2">Cold Brew</h3>
-                    <p class="text-sm">Ngọt dịu, mát lạnh, pha chậm 24h.</p>
+                <!-- Card 2 -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden card-hover">
+                    <img src="../Photos/menus/trasua/tra-dao-cam-sa.jpg" alt="Trà Đào Cam Sả" class="w-full h-56 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold text-4B2E05 mb-2">Trà Đào Cam Sả</h3>
+                        <p class="text-gray-600">Thức uống giải nhiệt hoàn hảo với vị ngọt của đào, chua nhẹ của cam và hương thơm thư giãn từ sả.</p>
+                    </div>
                 </div>
-                <div class="bg-white text-222222 rounded-xl shadow-lg p-6 card-hover">
-                    <img src="../Photos/banner.jpg" alt="Cappuccino" class="w-full h-48 object-cover rounded-lg mb-4">
-                    <h3 class="text-xl font-bold mb-2">Cappuccino Old Style</h3>
-                    <p class="text-sm">Bọt sữa dày, vị cân bằng hoàn hảo.</p>
+                <!-- Card 3 -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden card-hover">
+                    <img src="../Photos/menus/ankem/tiramisu.jpg" alt="Bánh Tiramisu" class="w-full h-56 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold text-4B2E05 mb-2">Bánh Tiramisu</h3>
+                        <p class="text-gray-600">Chiếc bánh kinh điển từ Ý với lớp kem mascarpone mềm mịn, xen kẽ vị cà phê và bột cacao đắng nhẹ.</p>
+                    </div>
                 </div>
             </div>
             <div class="text-center mt-8">
-                <a href="../index.php#menu" class="cta-button text-white px-6 py-3 rounded-full font-semibold inline-block">Xem Toàn Bộ Menu</a>
+                <a href="../menus/menus.php" class="cta-button text-white px-8 py-4 rounded-full font-semibold inline-block">Khám Phá Toàn Bộ Menu</a>
             </div>
         </div>
     </section>
@@ -262,6 +271,18 @@ ini_set('display_errors', 1);
         </div>
     </section>
 
+    <!-- Lucky Spinner Section -->
+    <section id="lucky-spinner" class="py-20 bg-white parallax" style="background-image: url('../Photos/background.jpg');">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <h2 class="text-4xl md:text-5xl font-bold text-white drop-shadow-lg mb-4">Vòng Quay May Mắn</h2>
+            <p class="text-lg md:text-xl text-white drop-shadow mb-8 max-w-2xl mx-auto">Thử vận may của bạn và nhận những phần quà hấp dẫn chỉ có tại The Old Flavour!</p>
+            <a href="spinner/spinner.php" class="cta-button text-white text-xl px-10 py-4 rounded-full font-semibold inline-block transform hover:scale-110 transition-transform duration-300">
+                <i class="fas fa-sync-alt fa-spin mr-2"></i>
+                Tham gia ngay
+            </a>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer class="bg-4B2E05 text-white py-12">
         <div class="max-w-6xl mx-auto px-4">
@@ -323,6 +344,22 @@ ini_set('display_errors', 1);
             document.getElementById('signupPopup').classList.add('show');
         }, 5000);
 
+        // Lắng nghe thông báo từ iframe của vòng quay
+        window.addEventListener('message', function(event) {
+            // Không cần kiểm tra origin nếu iframe cùng nguồn, nhưng đây là cách làm tốt
+            // if (event.origin !== 'http://your-domain.com') return;
+
+            const messageContainer = document.getElementById('spinner-message');
+            if (event.data && (event.data.type === 'SPIN_SUCCESS' || event.data.type === 'SPIN_ERROR')) {
+                messageContainer.textContent = event.data.message;
+                messageContainer.style.display = 'block';
+
+                if(event.data.type === 'SPIN_ERROR') {
+                    messageContainer.classList.remove('bg-green-600/80');
+                    messageContainer.classList.add('bg-red-600/80');
+                }
+            }
+        });
 
     </script>
 </body>

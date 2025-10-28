@@ -180,11 +180,11 @@ if ($result && $result->num_rows > 0) {
                 targetType: 'blog',
                 targetId: <?php echo $blog['blog_id']; ?>,
                 loggedInUserId: <?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'null'; ?>,
-                baseUrl: '<?php echo $base_url; ?>',
+                baseUrl: '<?php echo rtrim($base_url, '/'); ?>',
                 themeColorClass: 'text-yellow-700',
-                defaultAvatar: '<?php echo $base_url; ?>/customer/Photos/avatar/avatar1.jpg',
+                defaultAvatar: '<?php echo $base_url; ?>/customer/Photos/avatar/avatar1.jpg', // Giữ nguyên cho fallback
                 currentUser: <?php echo isset($_SESSION['user_id']) ? json_encode([
-                    'avatar' => $_SESSION['avatar_image'] ?? ($base_url . '/customer/Photos/avatar/avatar1.jpg'),
+                    'avatar' => $_SESSION['avatar_image'] ?? ($base_url . '/customer/Photos/avatar/avatar1.jpg'), // Giữ nguyên cho fallback
                     'points' => $_SESSION['loyalty_points'] ?? 0
                 ]) : 'null'; ?>
             });

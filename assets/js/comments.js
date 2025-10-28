@@ -77,7 +77,7 @@ function initializeCommentsSection(config) {
         container.className = `relative ${sizeClass} flex-shrink-0`;
         container.title = rankTooltip;
         container.innerHTML = `
-            <img src="${avatarUrl || defaultAvatar}" alt="Your avatar" class="w-full h-full rounded-full object-cover">
+            <img src="${(avatarUrl && (avatarUrl.startsWith('http') || avatarUrl.startsWith('/'))) ? avatarUrl : (baseUrl + '/' + (avatarUrl || defaultAvatar.replace(baseUrl + '/', '')))}" alt="Your avatar" class="w-full h-full rounded-full object-cover">
             <div class="absolute inset-0 rounded-full ${rankClass}"></div>
         `;
     }

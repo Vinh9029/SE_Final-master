@@ -43,6 +43,10 @@ $stmt->fetch();
 $stmt->close();
 $total_points = $total_points ?? 0;
 
+// Cập nhật session với dữ liệu mới nhất
+$_SESSION['avatar_image'] = $avatar_image_db;
+$_SESSION['loyalty_points'] = $total_points;
+
 // Determine user level based on points
 if ($total_points >= 1000) {
     $level = 'Diamond';

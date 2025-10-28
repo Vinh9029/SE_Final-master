@@ -1,15 +1,9 @@
 <?php
+include_once __DIR__ . '/../admin_auth.php'; // Kiểm tra quyền truy cập của admin
 include_once __DIR__ . '/../../database/db_connection.php';
 include_once __DIR__ . '/../../includes/handlers/notification/createNotification.php'; // Thêm file xử lý thông báo
-session_start();
 
 header('Content-Type: application/json');
-
-// Check if admin is logged in
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    echo json_encode(['success' => false, 'message' => 'Unauthorized access.']);
-    exit;
-}
 
 $comment_id = $_POST['comment_id'] ?? null;
 $new_status = $_POST['status'] ?? null;
