@@ -24,7 +24,8 @@ $stmt = $conn->prepare("
         u.full_name, 
         u.phone,
         u.created_at,
-        u.avatar_image
+        u.avatar_image,
+        u.deactivated_account
     FROM users u
     WHERE u.user_id = ? AND u.role = 'customer'
 ");
@@ -106,6 +107,13 @@ function getStatusClass($status) {
             <div class="mt-2">
                 <span class="<?php echo htmlspecialchars($theme_class); ?> px-3 py-1 text-sm rounded-full font-bold"><?php echo htmlspecialchars($rank_name); ?></span>
             </div>
+            <?php if ($customer['deactivated_account'] == 1): ?>
+                <div class="mt-2">
+                    <span class="bg-red-100 text-red-800 px-3 py-1 text-sm rounded-full font-bold flex items-center gap-2">
+                        <i class="fa fa-exclamation-triangle"></i> Tài khoản đã bị vô hiệu hóa
+                    </span>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -144,6 +152,19 @@ function getStatusClass($status) {
                 <p><i class="fa fa-phone text-orange-500 w-5"></i> <strong class="text-gray-600">SĐT:</strong> <?php echo htmlspecialchars($customer['phone'] ?? 'N/A'); ?></p>
                 <p><i class="fa fa-calendar-alt text-green-500 w-5"></i> <strong class="text-gray-600">Ngày tham gia:</strong> <?php echo date("d/m/Y", strtotime($customer['created_at'])); ?></p>
             </div>
+
+            <h3 class="text-xl font-bold text-gray-800 mt-6 mb-4 border-b pb-2">Hành động</h3>
+            <div class="space-y-3">
+                <?php if ($customer['deactivated_account'] == 0): ?>
+                    <button id="deactivate-btn" class="w-full inline-flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold shadow-sm transition">
+                        <i class="fa fa-user-slash"></i> Vô hiệu hóa tài khoản
+                    </button>
+                <?php else: ?>
+                    <button id="reactivate-btn" class="w-full inline-flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-bold shadow-sm transition">
+                        <i class="fa fa-user-check"></i> Kích hoạt lại tài khoản
+                    </button>
+                <?php endif; ?>
+            </div>
         </div>
         <!-- Right: Order History -->
         <div class="lg:col-span-3 bg-white rounded-2xl shadow-xl p-6">
@@ -169,3 +190,60 @@ function getStatusClass($status) {
         </div>
     </div>
 </div>
+
+<script>
+    const customerId = <?php echo json_encode($customer_id); ?>;
+    const deactivateBtn = document.getElementById('deactivate-btn');
+    const reactivateBtn = document.getElementById('reactivate-btn');
+
+    function handleAccountStatusChange(action) {
+        const isDeactivating = action === 'deactivate';
+        const title = isDeactivating ? 'Vô hiệu hóa tài khoản?' : 'Kích hoạt lại tài khoản?';
+        const text = isDeactivating 
+            ? 'Người dùng sẽ không thể đăng nhập sau khi bị vô hiệu hóa. Bạn có chắc chắn?'
+            : 'Người dùng sẽ có thể đăng nhập lại. Bạn có chắc chắn?';
+        const confirmButtonText = isDeactivating ? 'Vâng, vô hiệu hóa!' : 'Vâng, kích hoạt lại!';
+
+        // Sử dụng showConfirmationModal từ dashboard.php
+        showConfirmationModal(title, text, confirmButtonText, () => {
+            const formData = new FormData();
+            formData.append('user_id', customerId);
+            formData.append('action', action);
+
+            fetch('customers/update_status.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    // Tải lại nội dung của tab chi tiết để cập nhật trạng thái
+                    if (typeof loadPage === 'function') { // Check if loadPage function exists in parent
+                        loadPage('customers/detail.php?id=' + customerId, true);
+                    } else {
+                        window.location.reload(); // Fallback to a full page reload
+                    }
+                } else {
+                    showToast('Lỗi: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Đã xảy ra lỗi khi thực hiện hành động.', 'error');
+            });
+        });
+    }
+
+    if (deactivateBtn) {
+        deactivateBtn.addEventListener('click', function() {
+            handleAccountStatusChange('deactivate');
+        });
+    }
+
+    if (reactivateBtn) {
+        reactivateBtn.addEventListener('click', function() {
+            handleAccountStatusChange('reactivate');
+        });
+    }
+</script>

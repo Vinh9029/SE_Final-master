@@ -40,26 +40,13 @@ while ($item = $res->fetch_assoc()) {
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .checkout-container {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .cta-button {
+            background: linear-gradient(135deg, #4B2E05 0%, #C4A35A 100%);
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        .cta-button:hover {
+            background: linear-gradient(135deg, #C4A35A 0%, #4B2E05 100%);
         }
-
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #ee5a24 0%, #ff6b6b 100%);
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-        }
-
-        .btn-success:hover {
-            background: linear-gradient(135deg, #45a049 0%, #4CAF50 100%);
-        }
-
         .payment-method {
             transition: all 0.3s ease;
         }
@@ -76,19 +63,19 @@ while ($item = $res->fetch_assoc()) {
     </style>
 </head>
 
-<body class="bg-gray-50">
+<body class="bg-beige">
     <!-- Header -->
     <?php include '../../../includes/header.php'; ?>
 
     <!-- Checkout Section -->
-    <div class="checkout-container min-h-screen py-12">
+    <div class="checkout-container min-h-screen py-12 bg-beige">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Checkout Form -->
                 <div class="lg:col-span-2">
                     <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
                         <!-- Header -->
-                        <div class="bg-gradient-to-r from-orange-500 to-red-500 p-6">
+                        <div class="bg-gradient-to-r from-yellow-800 to-yellow-900 p-6">
                             <div class="flex items-center gap-3">
                                 <i class="fas fa-credit-card text-white text-2xl"></i>
                                 <h1 class="text-2xl font-bold text-white">Thông tin thanh toán</h1>
@@ -99,7 +86,7 @@ while ($item = $res->fetch_assoc()) {
                             <!-- Customer Information -->
                             <div class="mb-8">
                                 <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                    <i class="fas fa-user text-orange-500"></i>
+                                    <i class="fas fa-user text-yellow-800"></i>
                                     Thông tin khách hàng
                                 </h2>
 
@@ -107,27 +94,27 @@ while ($item = $res->fetch_assoc()) {
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Họ và tên *</label>
                                         <input type="text" name="full_name" value="<?php echo $user_info['full_name'] ?? ''; ?>" required
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                                     </div>
 
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Số điện thoại *</label>
                                         <input type="tel" name="phone" value="<?php echo $user_info['phone'] ?? ''; ?>" required
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                                     </div>
 
                                     <div class="md:col-span-2">
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
                                         <input type="email" name="email" value="<?php echo $user_info['email'] ?? ''; ?>" required
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Shipping Information -->
                             <div class="mb-6">
-                                <h2 class="text-xl font-bold text-pink-600 mb-4 flex items-center gap-2">
-                                    <i class="fas fa-store text-orange-500"></i>
+                                <h2 class="text-xl font-bold text-yellow-900 mb-4 flex items-center gap-2">
+                                    <i class="fas fa-store text-yellow-800"></i>
                                     Phương thức nhận hàng
                                 </h2>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -135,7 +122,7 @@ while ($item = $res->fetch_assoc()) {
                                     <div class="delivery-method border-2 border-gray-200 rounded-2xl p-4 cursor-pointer transition hover:border-pink-400"
                                         onclick="selectDelivery('pickup')">
                                         <label class="flex items-center gap-3">
-                                            <input type="radio" name="delivery_method" value="pickup" class="accent-pink-600"
+                                            <input type="radio" name="delivery_method" value="pickup" class="accent-yellow-600"
                                                 checked onclick="showAddress(false)">
                                             <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center">
                                                 <i class="fas fa-store text-gray-600 text-xl"></i>
@@ -150,7 +137,7 @@ while ($item = $res->fetch_assoc()) {
                                     <div class="delivery-method border-2 border-gray-200 rounded-2xl p-4 cursor-pointer transition hover:border-pink-400"
                                         onclick="selectDelivery('delivery')">
                                         <label class="flex items-center gap-3">
-                                            <input type="radio" name="delivery_method" value="delivery" class="accent-pink-600"
+                                            <input type="radio" name="delivery_method" value="delivery" class="accent-yellow-600"
                                                 onclick="showAddress(true)">
                                             <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
                                                 <i class="fas fa-truck text-orange-500 text-xl"></i>
@@ -167,8 +154,8 @@ while ($item = $res->fetch_assoc()) {
                             <div id="address-card" class="mb-6">
                                 <!-- Shipping Information -->
                                 <div class="mb-8">
-                                    <h2 class="text-xl font-bold text-pink-600 mb-4 flex items-center gap-2">
-                                        <i class="fas fa-truck text-orange-500"></i>
+                                    <h2 class="text-xl font-bold text-yellow-900 mb-4 flex items-center gap-2">
+                                        <i class="fas fa-truck text-yellow-800"></i>
                                         Địa chỉ giao hàng
                                     </h2>
 
@@ -176,14 +163,14 @@ while ($item = $res->fetch_assoc()) {
                                         <div class="md:col-span-2">
                                             <label class="block text-sm font-medium text-gray-700 mb-2">Địa chỉ *</label>
                                             <input type="text" name="address"
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                                                 placeholder="123 Đường ABC, Phường XYZ">
                                         </div>
 
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">Tỉnh/Thành phố *</label>
                                             <select name="city" required
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                                                 <option value="">Chọn tỉnh/thành phố</option>
                                                 <option value="Hà Nội">Hà Nội</option>
                                                 <option value="TP.HCM" selected>TP.HCM</option>
@@ -196,7 +183,7 @@ while ($item = $res->fetch_assoc()) {
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">Quận/Huyện *</label>
                                             <select name="district" required
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                                                 <option value="">Chọn quận/huyện</option>
                                                 <option value="Quận 1" selected>Quận 1</option>
                                                 <option value="Quận 3">Quận 3</option>
@@ -209,7 +196,7 @@ while ($item = $res->fetch_assoc()) {
                                         <div class="md:col-span-2">
                                             <label class="block text-sm font-medium text-gray-700 mb-2">Ghi chú</label>
                                             <textarea name="notes" rows="3"
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                                                 placeholder="Ghi chú về đơn hàng..."></textarea>
                                         </div>
                                     </div>
@@ -218,7 +205,7 @@ while ($item = $res->fetch_assoc()) {
                             <!-- Payment Methods -->
                             <div class="mb-8">
                                 <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                    <i class="fas fa-money-bill-wave text-orange-500"></i>
+                                    <i class="fas fa-money-bill-wave text-yellow-800"></i>
                                     Phương thức thanh toán
                                 </h2>
 
@@ -256,7 +243,7 @@ while ($item = $res->fetch_assoc()) {
                             <!-- Submit Button -->
                             <div class="flex justify-between items-center mb-4">
                                 <a href="../index.php" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-full font-bold transition-colors flex items-center gap-2"><i class="fas fa-arrow-left"></i> Quay lại giỏ hàng</a>
-                                <button type="submit" class="btn-primary text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2">
+                                <button type="submit" class="cta-button text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2">
                                     <i class="fas fa-shopping-cart mr-2"></i>
                                     Đặt hàng ngay
                                 </button>
@@ -269,7 +256,7 @@ while ($item = $res->fetch_assoc()) {
                 <div class="lg:col-span-1">
                     <div class="bg-white rounded-3xl shadow-2xl p-6 sticky top-6">
                         <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                            <i class="fas fa-receipt text-orange-500"></i>
+                            <i class="fas fa-receipt text-yellow-800"></i>
                             Đơn hàng
                         </h2>
 
@@ -290,7 +277,7 @@ while ($item = $res->fetch_assoc()) {
                                         </p>
                                     </div>
                                     <div class="text-right">
-                                        <p class="font-bold text-orange-600"><?php echo number_format($item['price'] * $item['quantity']); ?>đ</p>
+                                        <p class="font-bold text-yellow-800"><?php echo number_format($item['price'] * $item['quantity']); ?>đ</p>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -319,7 +306,7 @@ while ($item = $res->fetch_assoc()) {
                         <div class="border-t pt-4">
                             <div class="flex justify-between items-center text-lg font-bold">
                                 <span>Tổng cộng:</span>
-                                <span class="text-orange-600" id="order-total"><?php echo number_format($total); ?>đ</span>
+                                <span class="text-yellow-800" id="order-total"><?php echo number_format($total); ?>đ</span>
                             </div>
                             <?php if ($voucher_code && $total >= $voucher_min_order): ?>
                             <div class="flex justify-between items-center text-base mt-2">
@@ -339,11 +326,11 @@ while ($item = $res->fetch_assoc()) {
                             <?php endif; ?>
                             <div class="flex justify-between items-center text-base mt-2" id="shipping-row" style="display: none;">
                                 <span class="text-gray-700">Phí giao hàng:</span>
-                                <span class="text-orange-600 font-bold" id="order-shipping"></span>
+                                <span class="text-yellow-800 font-bold" id="order-shipping"></span>
                             </div>
                             <div class="flex justify-between items-center text-lg font-bold mt-2">
                                 <span>Tổng thanh toán:</span>
-                                <span class="text-pink-600" id="order-total-after"><?php echo number_format($total_after); ?>đ</span>
+                                <span class="text-yellow-900" id="order-total-after"><?php echo number_format($total_after); ?>đ</span>
                             </div>
                         </div>
                     </div>

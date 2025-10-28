@@ -21,16 +21,12 @@ if (!isset($_SESSION['user_id'])) {
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        .cart-gradient {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .cta-button {
+            background: linear-gradient(135deg, #4B2E05 0%, #C4A35A 100%);
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-        }
-
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #ee5a24 0%, #ff6b6b 100%);
+        .cta-button:hover {
+            background: linear-gradient(135deg, #C4A35A 0%, #4B2E05 100%);
         }
 
         .cart-item-anim {
@@ -39,22 +35,22 @@ if (!isset($_SESSION['user_id'])) {
 
         .cart-item-anim:hover {
             box-shadow: 0 8px 32px 0 rgba(255, 107, 107, 0.15);
-            background: #fdf6f6;
+            background: #fefbf5;
         }
     </style>
 </head>
 
 <body class="bg-gray-50 min-h-screen flex flex-col">
     <?php include '../../includes/header.php'; ?>
-    <main class="flex-1 cart-gradient py-12">
+    <main class="flex-1 bg-beige py-12">
         <div class="container mx-auto px-4">
             <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
                 <!-- Header -->
-                <div class="bg-gradient-to-r from-orange-500 to-red-500 p-6">
-                    <div class="flex items-center justify-between text-pink-600">
+                <div class="bg-gradient-to-r from-yellow-800 to-yellow-900 p-6">
+                    <div class="flex items-center justify-between text-white">
                         <div class="flex items-center gap-3">
-                            <i class="fas fa-shopping-cart text-pink text-2xl"></i>
-                            <h1 class="text-2xl font-bold text-pink">Giỏ hàng của bạn</h1>
+                            <i class="fas fa-shopping-cart text-2xl"></i>
+                            <h1 class="text-2xl font-bold">Giỏ hàng của bạn</h1>
                         </div>
                         <div class="text-white">
                             <span class="text-lg">Tổng cộng: </span>
@@ -92,7 +88,7 @@ if (!isset($_SESSION['user_id'])) {
                                 $voucher_result = $voucher_stmt->get_result();
                                 while ($voucher = $voucher_result->fetch_assoc()):
                                 ?>
-                                    <button class="voucher-btn bg-gradient-to-r from-pink-100 to-pink-200 hover:from-pink-200 hover:to-pink-300 text-pink-700 px-4 py-2 rounded-xl font-semibold shadow transition flex flex-col items-start border border-pink-200" data-voucher="<?= htmlspecialchars($voucher['code']) ?>">
+                                    <button class="voucher-btn bg-gradient-to-r from-yellow-100 to-yellow-200 hover:from-yellow-200 hover:to-yellow-300 text-yellow-800 px-4 py-2 rounded-xl font-semibold shadow transition flex flex-col items-start border border-yellow-200" data-voucher="<?= htmlspecialchars($voucher['code']) ?>">
                                         <span class="text-base font-bold">Mã: <?= htmlspecialchars($voucher['code']) ?></span>
                                         <span class="text-xs text-gray-600">Chương trình: <?= htmlspecialchars($voucher['program_name']) ?></span>
                                         <span class="text-xs text-gray-600">Giảm: <?= $voucher['discount_percent'] > 0 ? $voucher['discount_percent'] . '%' : 'Voucher tiền mặt' ?></span>
@@ -129,7 +125,7 @@ if (!isset($_SESSION['user_id'])) {
                             </div>
                             <div class="flex justify-between mb-2">
                                 <span class="text-gray-700">Tổng thanh toán:</span>
-                                <span id="order-total-after" class="font-bold text-pink-600">0đ</span>
+                                <span id="order-total-after" class="font-bold text-yellow-800">0đ</span>
                             </div>
                         </div>
                     </div>
@@ -143,7 +139,7 @@ if (!isset($_SESSION['user_id'])) {
                                 class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-full font-bold transition-colors"><i
                                     class="fas fa-trash mr-2"></i>Xóa tất cả</button>
                             <a href="checkout/index.php"
-                                class="btn-primary text-white px-8 py-3 rounded-full font-bold shadow-lg hover:shadow-xl transition-all duration-300"><i
+                                class="cta-button text-white px-8 py-3 rounded-full font-bold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"><i
                                     class="fas fa-credit-card mr-2"></i>Thanh toán</a>
                         </div>
                     </div>
@@ -202,7 +198,7 @@ if (!isset($_SESSION['user_id'])) {
                             <p id="confirm-modal-message" class="text-gray-600 mb-8"></p>
                             <div class="flex justify-center gap-4">
                                 <button id="confirm-modal-cancel" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 py-3 rounded-full font-bold transition-colors">Hủy bỏ</button>
-                                <button id="confirm-modal-confirm" class="btn-primary text-white px-8 py-3 rounded-full font-bold transition-colors">Xác nhận</button>
+                                <button id="confirm-modal-confirm" class="cta-button text-white px-8 py-3 rounded-full font-bold transition-colors">Xác nhận</button>
                             </div>
                         </div>
                     </div>`;
@@ -240,8 +236,8 @@ if (!isset($_SESSION['user_id'])) {
                     .then(data => {
                         showLoading(false);
                         if (data.success) {
-                            document.querySelectorAll('.voucher-btn').forEach(b => b.classList.remove('ring-2', 'ring-pink-400'));
-                            btn.classList.add('ring-2', 'ring-pink-400');
+                            document.querySelectorAll('.voucher-btn').forEach(b => b.classList.remove('ring-2', 'ring-yellow-700'));
+                            btn.classList.add('ring-2', 'ring-yellow-700');
                             appliedVoucherCode = data.voucher.code;
                             appliedVoucherDiscount = data.voucher.discount_percent;
                             appliedVoucherMinOrder = data.voucher.min_order_value;
@@ -272,7 +268,7 @@ if (!isset($_SESSION['user_id'])) {
                 .then(data => {
                     showLoading(false);
                     if (data.success) {
-                        document.querySelectorAll('.voucher-btn').forEach(b => b.classList.remove('ring-2', 'ring-pink-400'));
+                        document.querySelectorAll('.voucher-btn').forEach(b => b.classList.remove('ring-2', 'ring-yellow-700'));
                         appliedVoucherCode = null;
                         appliedVoucherDiscount = 0;
                         appliedVoucherMinOrder = 0;

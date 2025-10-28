@@ -37,6 +37,9 @@ if (isset($_SESSION['user_id'])) {
     $noti_stmt->execute();
     $noti_result = $noti_stmt->get_result()->fetch_assoc();
     $notification_count = $noti_result['total'] ?? 0;
+
+    // Kiểm tra tài khoản có bị vô hiệu hóa không
+    include_once __DIR__ . '/deactivatedUser.php';
 }
 ?>
 
@@ -113,8 +116,10 @@ if (isset($_SESSION['user_id'])) {
                     <div class="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                         <a href="<?php echo $base_url; ?>/customer/account.php?page=profile" class="block px-4 py-2 text-gray-700 hover:bg-pink-50">Thông tin tài khoản</a>
                         <a href="<?php echo $base_url; ?>/customer/account.php?page=orders" class="block px-4 py-2 text-gray-700 hover:bg-pink-50">Đơn hàng</a>
-                        <a href="<?php echo $base_url; ?>/customer/account.php?page=settings" class="block px-4 py-2 text-gray-700 hover:bg-pink-50">Cài đặt tài khoản</a>
-                        <a href="<?php echo $base_url; ?>/customer/logout.php" class="block px-4 py-2 text-gray-700 hover:bg-pink-50">Đăng xuất</a>
+                        <a href="<?php echo $base_url; ?>/customer/account.php?page=vouchers" class="block px-4 py-2 text-gray-700 hover:bg-pink-50">Voucher của tôi</a>
+                        <a href="<?php echo $base_url; ?>/customer/account.php?page=comments" class="block px-4 py-2 text-gray-700 hover:bg-pink-50">Bình luận của tôi</a>
+                        <a href="<?php echo $base_url; ?>/customer/account.php?page=settings" class="block px-4 py-2 text-gray-700 hover:bg-pink-50 border-t">Cài đặt</a>
+                        <a href="<?php echo $base_url; ?>/customer/logout.php" class="block px-4 py-2 text-gray-700 hover:bg-pink-50 border-t">Đăng xuất</a>
                     </div>
                 </div>
             <?php else: ?>
