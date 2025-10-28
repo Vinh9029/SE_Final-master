@@ -91,6 +91,12 @@ if ($result && $result->num_rows > 0) {
             color: #6b4a28;
             font-size: 1.2rem;
         }
+        /* Rank styles for comments - Synced with avatar.php */
+        .rank-bronze { border: 2px solid #a16207; box-shadow: 0 0 0 1px #fef3c7; } /* yellow-800, ring-yellow-100 */
+        .rank-silver { border: 2px solid #9ca3af; box-shadow: 0 0 0 1px #e5e7eb; } /* gray-400, ring-gray-200 */
+        .rank-gold { border: 2px solid #f59e0b; box-shadow: 0 0 0 2px #fef3c7; } /* yellow-400, ring-yellow-200 */
+        .rank-platinum { border: 2px solid #d1d5db; box-shadow: 0 0 0 2px #e5e7eb; } /* gray-300, ring-gray-200 */
+        .rank-diamond { border: 2px solid #60a5fa; box-shadow: 0 0 0 2px #dbeafe; } /* blue-400, ring-blue-200 */
     </style>
 </head>
 
@@ -176,7 +182,11 @@ if ($result && $result->num_rows > 0) {
                 loggedInUserId: <?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'null'; ?>,
                 baseUrl: '<?php echo $base_url; ?>',
                 themeColorClass: 'text-yellow-700',
-                defaultAvatar: '<?php echo $base_url; ?>/customer/Photos/avatar/avatar1.jpg'
+                defaultAvatar: '<?php echo $base_url; ?>/customer/Photos/avatar/avatar1.jpg',
+                currentUser: <?php echo isset($_SESSION['user_id']) ? json_encode([
+                    'avatar' => $_SESSION['avatar_image'] ?? ($base_url . '/customer/Photos/avatar/avatar1.jpg'),
+                    'points' => $_SESSION['loyalty_points'] ?? 0
+                ]) : 'null'; ?>
             });
         <?php endif; ?>
         });

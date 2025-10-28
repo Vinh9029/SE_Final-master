@@ -1,4 +1,4 @@
--- Active: 1758856835071@@localhost@3306@theoldflavour
+-- Active: 1761633694540@@127.0.0.1@3306@theoldflavour
 -- Database schema for SE_Final-Cart-Checkout
 
 DROP DATABASE IF EXISTS theoldflavour;
@@ -195,26 +195,13 @@ CREATE TABLE comments (
 -- Add indexes for better performance on lookups
 CREATE INDEX idx_comments_target ON comments (target_type, target_id);
 
--- Drop the 'likes' column from the 'comments' table as reactions will be stored in 'comment_reactions'
-ALTER TABLE comments DROP COLUMN likes;
-
--- =================================================================
--- Table for Comment Likes
--- =================================================================
 CREATE TABLE comment_reactions (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   comment_id INT NOT NULL,
+  reaction_type ENUM('like', 'love', 'haha', 'wow', 'sad', 'angry') NOT NULL DEFAULT 'like',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
   FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE,
   UNIQUE KEY (user_id, comment_id) -- Ensures a user can only like a comment once
 );
-
-
--- Add a column to store the type of reaction
-ALTER TABLE comment_reactions
-ADD COLUMN reaction_type ENUM('like', 'love', 'haha', 'wow', 'sad', 'angry') NOT NULL DEFAULT 'like' AFTER comment_id;
-
--- Update existing records to 'like' as default reaction type
-UPDATE comment_reactions SET reaction_type = 'like';

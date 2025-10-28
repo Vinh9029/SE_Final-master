@@ -24,9 +24,11 @@ $sql = "
         c.id, c.user_id, c.content, c.created_at, c.parent_id,
         u.full_name AS username,
         u.avatar_image AS user_avatar,
+        lp.points AS user_points,
         cr.reaction_type AS user_reaction
     FROM comments c
     JOIN users u ON c.user_id = u.user_id
+    LEFT JOIN loyalty_points lp ON u.user_id = lp.user_id
     LEFT JOIN comment_reactions cr ON c.id = cr.comment_id AND cr.user_id = ?
     WHERE c.target_type = ? AND c.target_id = ? AND c.status = 'approved'
     ORDER BY c.created_at ASC

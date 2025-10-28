@@ -8,10 +8,15 @@ if (!isset($_SESSION['user_id'])) {
 
 // Fetch user data
 $user_id = $_SESSION['user_id'];
-$stmt = $conn->prepare("SELECT full_name, email FROM users WHERE user_id = ?");
+$stmt = $conn->prepare("
+    SELECT u.full_name, u.email, u.avatar_image, lp.points 
+    FROM users u 
+    LEFT JOIN loyalty_points lp ON u.user_id = lp.user_id 
+    WHERE u.user_id = ?
+");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$stmt->bind_result($full_name, $email);
+$stmt->bind_result($full_name, $email, $avatar_image, $points);
 $stmt->fetch();
 $stmt->close();
 ?>

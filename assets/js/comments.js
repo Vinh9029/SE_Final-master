@@ -9,7 +9,7 @@
  * @param {string} config.defaultAvatar - URL ảnh đại diện mặc định.
  */
 function initializeCommentsSection(config) {
-    const { targetType, targetId, loggedInUserId, baseUrl, themeColorClass, defaultAvatar } = config;
+    const { targetType, targetId, loggedInUserId, baseUrl, themeColorClass, defaultAvatar, currentUser } = config;
 
     const commentsContainer = document.getElementById('comments-container');
     const commentForm = document.getElementById('comment-form');
@@ -52,6 +52,36 @@ function initializeCommentsSection(config) {
         setTimeout(() => { toast.classList.remove('show'); }, 3000);
     }
 
+    // Helper function to get rank class based on points
+    function getRankClasses(points) {
+        const p = parseInt(points || 0);
+        if (p >= 1000) return 'rank-diamond';
+        if (p >= 600) return 'rank-platinum';
+        if (p >= 300) return 'rank-gold';
+        if (p >= 100) return 'rank-silver';
+        return 'rank-bronze';
+    }
+
+    // Function to render the current user's avatar and rank border
+    function renderUserAvatarWithRank(container, avatarUrl, points, sizeClass = 'w-12 h-12') {
+        if (!container) return;
+        const rankClass = getRankClasses(points);
+        const rankTooltip = {
+            'rank-diamond': 'Hạng Kim Cương 💎',
+            'rank-platinum': 'Hạng Bạch Kim ✨',
+            'rank-gold': 'Hạng Vàng 🟡',
+            'rank-silver': 'Hạng Bạc ⚪',
+            'rank-bronze': 'Hạng Đồng 🟤'
+        }[rankClass];
+
+        container.className = `relative ${sizeClass} flex-shrink-0`;
+        container.title = rankTooltip;
+        container.innerHTML = `
+            <img src="${avatarUrl || defaultAvatar}" alt="Your avatar" class="w-full h-full rounded-full object-cover">
+            <div class="absolute inset-0 rounded-full ${rankClass}"></div>
+        `;
+    }
+
     function loadComments() {
         fetch(`${baseUrl}/includes/handlers/comments/getComments.php?target_type=${targetType}&target_id=${targetId}`)
             .then(res => res.json())
@@ -76,6 +106,16 @@ function initializeCommentsSection(config) {
      * @returns {HTMLElement} - Phần tử div chứa bình luận.
      */
     function createCommentElement(comment, isReply = false) {
+        const rankClass = getRankClasses(comment.user_points);
+        // Tooltip text for the rank
+        const rankTooltip = {
+            'rank-diamond': 'Hạng Kim Cương 💎',
+            'rank-platinum': 'Hạng Bạch Kim ✨',
+            'rank-gold': 'Hạng Vàng 🟡',
+            'rank-silver': 'Hạng Bạc ⚪',
+            'rank-bronze': 'Hạng Đồng 🟤'
+        }[rankClass];
+
         const commentWrapper = document.createElement('div');
         commentWrapper.id = `comment-wrapper-${comment.id}`;
         if (isReply) {
@@ -108,7 +148,10 @@ function initializeCommentsSection(config) {
         }
 
         commentElement.innerHTML = `
-            <img src="${comment.user_avatar || defaultAvatar}" alt="${comment.username}" class="${avatarSize} rounded-full object-cover">
+            <div class="relative ${avatarSize}" title="${rankTooltip}">
+                <img src="${comment.user_avatar || defaultAvatar}" alt="${comment.username}" class="w-full h-full rounded-full object-cover">
+                <div class="absolute inset-0 rounded-full ${rankClass}"></div>
+            </div>
             <div class="flex-1">
                 <div class="bg-gray-100 rounded-xl p-3 relative">
                     <div class="flex justify-between items-center">
@@ -212,8 +255,11 @@ function initializeCommentsSection(config) {
     function createReplyForm(parentId) {
         const form = document.createElement('form');
         form.className = 'reply-form flex items-start space-x-3 ml-10 mt-4';
+        
+        const avatarContainer = document.createElement('div');
+        renderUserAvatarWithRank(avatarContainer, currentUser.avatar, currentUser.points, 'w-10 h-10');
+
         form.innerHTML = `
-            <img src="${document.getElementById('user-avatar-header')?.src || defaultAvatar}" alt="Your avatar" class="w-10 h-10 rounded-full object-cover">
             <div class="flex-1">
                 <textarea name="content" class="w-full p-2 border rounded-lg text-sm" placeholder="Viết câu trả lời..." rows="2" required></textarea>
                 <input type="hidden" name="parent_id" value="${parentId}">
@@ -223,6 +269,7 @@ function initializeCommentsSection(config) {
                 </div>
             </div>
         `;
+        form.prepend(avatarContainer);
         return form;
     }
 
@@ -403,6 +450,12 @@ function initializeCommentsSection(config) {
                     }
                 });
         });
+    }
+
+    // Render avatar for the main comment form
+    if (loggedInUserId && currentUser) {
+        const mainAvatarContainer = document.getElementById('main-comment-avatar-rank-wrapper');
+        renderUserAvatarWithRank(mainAvatarContainer, currentUser.avatar, currentUser.points);
     }
 
     // Initial load

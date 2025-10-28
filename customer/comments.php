@@ -50,14 +50,14 @@ function get_target_info($comment, $base_url)
 {
     if ($comment['target_type'] === 'product' && $comment['product_name']) {
         $slug = generateSlug($comment['product_name']);
-        $url = "{$base_url}/menus/product.php?slug={$slug}" . ($comment['parent_id'] ? '#comment-wrapper-' . $comment['parent_id'] : '');
+        $url = "{$base_url}/menus/product.php?slug={$slug}" . (!empty($comment['parent_id']) ? '#comment-wrapper-' . $comment['parent_id'] : '');
         return [
             'url' => $url,
             'text' => "về sản phẩm: <a href='{$url}' target='_blank' class='font-bold text-pink-600 hover:underline'>" . htmlspecialchars($comment['product_name']) . "</a>",
             'icon' => 'fa-coffee text-orange-500'
         ];
     } elseif ($comment['target_type'] === 'blog' && $comment['blog_title']) {
-        $url = "{$base_url}/pages/blogs/detail.php?slug={$comment['blog_slug']}" . ($comment['parent_id'] ? '#comment-wrapper-' . $comment['parent_id'] : '');
+        $url = "{$base_url}/pages/blogs/detail.php?slug={$comment['blog_slug']}" . (!empty($comment['parent_id']) ? '#comment-wrapper-' . $comment['parent_id'] : '');
         return [
             'url' => $url,
             'text' => "về bài viết: <a href='{$url}' target='_blank' class='font-bold text-purple-600 hover:underline'>" . htmlspecialchars($comment['blog_title']) . "</a>",
