@@ -205,3 +205,5 @@ CREATE TABLE comment_reactions (
   FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE,
   UNIQUE KEY (user_id, comment_id) -- Ensures a user can only like a comment once
 );
+
+ALTER TABLE users ADD COLUMN `deactivated_account` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '0: active, 1: deactivated';
