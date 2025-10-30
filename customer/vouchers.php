@@ -29,8 +29,10 @@ if ($user_id) {
             <?php if ($v['status'] === 'used'): ?><span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">Đã dùng</span><?php endif; ?>
             <?php if ($v['status'] === 'expired'): ?><span class="text-xs bg-red-200 text-red-600 px-2 py-1 rounded">Hết hạn</span><?php endif; ?>
           </div>
-          <div class="text-sm text-gray-700 mb-1"><?php echo isset($v['program_name']) ? htmlspecialchars($v['program_name']) : ''; ?></div>
-          <div class="font-semibold text-yellow-600">Giảm <?php echo $v['discount_percent']; ?>%</div>
+          <div class="text-sm text-gray-700 mb-1"><?php echo isset($v['title']) ? htmlspecialchars($v['title']) : ''; ?></div>
+          <div class="font-semibold text-yellow-600">
+            Giảm <?php echo number_format($v['discount_value']); ?><?php echo $v['discount_type'] === 'percent' ? '%' : 'đ'; ?>
+          </div>
           <?php if ($v['min_order_value'] > 0): ?>
             <div class="text-xs text-gray-500">Áp dụng cho đơn từ <?php echo number_format($v['min_order_value']); ?>đ</div>
           <?php endif; ?>

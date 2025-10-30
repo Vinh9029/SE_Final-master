@@ -40,7 +40,7 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
           <li><a href="#" data-page="customers/list.php" class="block px-4 py-2 rounded-lg font-semibold text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition flex items-center"><i class="fa fa-users mr-2 text-blue-500"></i> Quản lý khách hàng</a></li>
           <li><a href="#" data-page="blog/list.php" class="block px-4 py-2 rounded-lg font-semibold text-gray-700 hover:bg-indigo-100 hover:text-indigo-600 transition flex items-center"><i class="fa fa-blog mr-2 text-indigo-500"></i> Quản lý Blog</a></li>
           <li><a href="#" data-page="comments/list.php" class="block px-4 py-2 rounded-lg font-semibold text-gray-700 hover:bg-green-100 hover:text-green-600 transition flex items-center"><i class="fa fa-comments mr-2 text-green-500"></i> Quản lý bình luận</a></li>
-          <li><a href="#" data-page="vouchers/manage.php" class="block px-4 py-2 rounded-lg font-semibold text-gray-700 hover:bg-purple-100 hover:text-purple-600 transition flex items-center"><i class="fa fa-ticket-alt mr-2 text-purple-500"></i> Quản lý voucher</a></li>
+          <li><a href="#" data-page="vouchers/list.php" class="block px-4 py-2 rounded-lg font-semibold text-gray-700 hover:bg-purple-100 hover:text-purple-600 transition flex items-center"><i class="fa fa-ticket-alt mr-2 text-purple-500"></i> Quản lý voucher</a></li>
           <li><a href="#" data-page="reports/sales.php" class="block px-4 py-2 rounded-lg font-semibold text-gray-700 hover:bg-green-100 hover:text-green-600 transition flex items-center"><i class="fa fa-chart-line mr-2 text-green-500"></i> Báo cáo doanh số</a></li>
           <li><a href="#" data-page="reports/revenue.php" class="block px-4 py-2 rounded-lg font-semibold text-gray-700 hover:bg-purple-100 hover:text-purple-600 transition flex items-center"><i class="fa fa-coins mr-2 text-purple-500"></i> Báo cáo doanh thu</a></li>
           </li>
@@ -96,6 +96,10 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
     </main>
   </div>
   <script>
+    // Xác định đường dẫn gốc của trang admin để đảm bảo AJAX hoạt động chính xác
+    const adminBaseUrl = "<?php echo rtrim(dirname($_SERVER['PHP_SELF']), '/\\'); ?>/";
+
+
     // Global toast for messages
     const toast = document.createElement('div');
     toast.id = 'toast';
@@ -163,8 +167,9 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
               }, 400);
             });
         } else {
+          const pageUrl = this.getAttribute('data-page');
           mainContent.innerHTML = `<div class='flex flex-col items-center justify-center h-full'><div class='animate-pulse w-24 h-24 bg-pink-100 rounded-full mb-6'></div><div class='text-center text-gray-400 mt-10'><i class='fa fa-spinner fa-spin text-4xl mb-4'></i><div class='font-bold text-lg'>Đang tải...</div></div></div>`;
-          fetch(this.getAttribute('data-page'))
+          fetch(adminBaseUrl + pageUrl)
             .then(res => res.text())
             .then(html => {
               setTimeout(() => { // Thêm độ trễ nhỏ để tạo hiệu ứng mượt mà
@@ -193,7 +198,7 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
           const page = this.getAttribute('data-page') || this.getAttribute('href');
           if (page) {
             mainContent.innerHTML = `<div class='flex flex-col items-center justify-center h-full'><div class='animate-pulse w-24 h-24 bg-pink-100 rounded-full mb-6'></div><div class='text-center text-gray-400 mt-10'><i class='fa fa-spinner fa-spin text-4xl mb-4'></i><div class='font-bold text-lg'>Đang tải...</div></div></div>`;
-            fetch(page)
+            fetch(adminBaseUrl + page)
               .then(res => res.text())
               .then(html => {
                 setTimeout(() => {
@@ -221,7 +226,7 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
           const isApprove = this.classList.contains('approve-link');
           const actionText = isApprove ? 'duyệt' : 'từ chối';
 
-          fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+          fetch(adminBaseUrl + url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(res => res.json())
             .then(data => {
               if (data.success) {
@@ -251,7 +256,7 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
                   'Hành động này không thể hoàn tác!',
                   'Vâng, xóa nó!',
                   () => {
-                      fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                      fetch(adminBaseUrl + url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                           .then(res => res.json())
                           .then(data => {
                               if (data.success) {
@@ -287,7 +292,7 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
               const fullUrl = `${pageUrl}?${params.toString()}`;
 
               mainContent.innerHTML = `<div class='flex flex-col items-center justify-center h-full'><div class='animate-pulse w-24 h-24 bg-pink-100 rounded-full mb-6'></div><div class='text-center text-gray-400 mt-10'><i class='fa fa-spinner fa-spin text-4xl mb-4'></i><div class='font-bold text-lg'>Đang lọc...</div></div></div>`;
-              fetch(fullUrl)
+              fetch(adminBaseUrl + fullUrl)
                   .then(res => res.text())
                   .then(html => {
                       setTimeout(() => {
@@ -301,7 +306,8 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
           } else {
               // Logic xử lý form POST (CRUD) cũ
               const formData = new FormData(form);
-              fetch(form.action, {
+              // Đảm bảo action của form cũng là đường dẫn tuyệt đối
+              fetch(form.action, { 
                 method: 'POST',
                 body: formData,
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -311,7 +317,7 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
                 if (data.success) {
                   showToast(data.message, 'success');
                   if (data.redirect) {
-                    fetch(data.redirect)
+                    fetch(adminBaseUrl + data.redirect)
                       .then(res => res.text())
                       .then(html => {
                         mainContent.innerHTML = html;
@@ -335,7 +341,7 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
 
     // Vẽ biểu đồ cho dashboard
     function drawDashboardCharts() {
-        // Biểu đồ đơn hàng
+        // Biểu đồ đơn hàng - Sử dụng đường dẫn tuyệt đối
         fetch('dashboard/totalOrders.php')
             .then(res => res.json())
             .then(chartData => {
@@ -345,7 +351,7 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
                 }
             });
 
-        // Biểu đồ doanh thu
+        // Biểu đồ doanh thu - Sử dụng đường dẫn tuyệt đối
         fetch('dashboard/salesByDay.php')
             .then(res => res.json())
             .then(chartData => {
