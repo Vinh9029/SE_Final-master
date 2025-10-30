@@ -1,7 +1,6 @@
 <?php
 session_start();
 include_once __DIR__ . '/../database/db_connection.php';
-include_once __DIR__ . '/../config.php';
 
 header('Content-Type: application/json');
 
@@ -46,6 +45,7 @@ $items_result = $stmt->get_result();
 $items = $items_result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
+include_once __DIR__ . '/../config.php'; // Include config for base_url
 echo json_encode([
     'success' => true, 
     'order' => $order, 

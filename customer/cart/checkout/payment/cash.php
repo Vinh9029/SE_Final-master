@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../../../includes/config/database.php';
+include_once __DIR__ . '/../../../../database/db_connection.php';
 
 // Kiểm tra đăng nhập
 if (!isset($_SESSION['user_id'])) {
@@ -18,7 +18,7 @@ if ($order_id <= 0) {
 // Lấy thông tin đơn hàng
 $order_info = [];
 try {
-    $stmt = $conn->prepare("SELECT * FROM orders WHERE id = ? AND user_id = ?");
+    $stmt = $conn->prepare("SELECT * FROM orders WHERE order_id = ? AND user_id = ?");
     $stmt->bind_param("ii", $order_id, $_SESSION['user_id']);
     $stmt->execute();
     $order_info = $stmt->get_result()->fetch_assoc();
@@ -32,8 +32,16 @@ try {
     exit();
 }
 
-// Lấy thông tin khách hàng
-$customer_info = json_decode($order_info['customer_info'], true);
+// Lấy thông tin khách hàng từ bảng users
+$customer_stmt = $conn->prepare("SELECT full_name, email, phone FROM users WHERE user_id = ?");
+$customer_stmt->bind_param("i", $_SESSION['user_id']);
+$customer_stmt->execute();
+$customer_info = $customer_stmt->get_result()->fetch_assoc();
+
+// Lấy ghi chú từ đơn hàng (nếu có)
+// Giả sử bạn có một cột `notes` trong bảng `orders`
+$notes = $order_info['notes'] ?? '';
+
 ?>
 
 <!DOCTYPE html>
@@ -43,113 +51,108 @@ $customer_info = json_decode($order_info['customer_info'], true);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thanh toán tiền mặt - Đơn hàng #<?php echo $order_id; ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .payment-container {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #E6D3B1;
         }
-        .btn-success {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
         }
-        .btn-success:hover {
-            background: linear-gradient(135deg, #45a049 0%, #4CAF50 100%);
+        .cta-button {
+            background: linear-gradient(135deg, #4B2E05 0%, #C4A35A 100%);
         }
-        .order-card {
-            transition: all 0.3s ease;
+        .cta-button:hover {
+            background: linear-gradient(135deg, #C4A35A 0%, #4B2E05 100%);
         }
-        .order-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        .text-brown {
+            color: #4B2E05;
         }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-beige">
     <!-- Header -->
-    <?php include '../../includes/header.php'; ?>
+    <?php include_once __DIR__ . '/../../../../includes/header.php'; ?>
 
     <!-- Payment Section -->
-    <div class="payment-container min-h-screen py-12">
-        <div class="container mx-auto px-4">
-            <div class="max-w-4xl mx-auto">
+    <main class="min-h-screen py-12">
+        <div class="max-w-5xl mx-auto px-4">
                 <!-- Success Message -->
-                <div class="bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-2xl mb-8">
+                <div class="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-800 px-6 py-4 rounded-r-lg mb-8 shadow-lg">
                     <div class="flex items-center gap-3">
-                        <i class="fas fa-check-circle text-2xl"></i>
+                        <i class="fas fa-check-circle text-2xl text-yellow-600"></i>
                         <div>
-                            <h2 class="font-bold text-lg">Đặt hàng thành công!</h2>
-                            <p>Đơn hàng của bạn đã được tiếp nhận và đang chờ xác nhận.</p>
+                            <h2 class="font-bold text-lg text-brown">Đặt hàng thành công!</h2>
+                            <p>Cảm ơn bạn đã tin tưởng Old Flavour. Đơn hàng của bạn đã được tiếp nhận và đang chờ xử lý.</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <!-- Order Details -->
-                    <div class="lg:col-span-2">
-                        <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
+                    <div class="lg:col-span-2 bg-white rounded-2xl shadow-xl p-8">
                             <!-- Header -->
-                            <div class="bg-gradient-to-r from-green-500 to-blue-500 p-6">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-3">
-                                        <i class="fas fa-receipt text-white text-2xl"></i>
-                                        <h1 class="text-2xl font-bold text-white">Đơn hàng #<?php echo $order_id; ?></h1>
-                                    </div>
-                                    <div class="text-white">
-                                        <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
-                                            <i class="fas fa-clock mr-1"></i>Chờ xác nhận
-                                        </span>
-                                    </div>
+                            <div class="flex items-center justify-between pb-4 border-b mb-6">
+                                <h1 class="text-3xl font-bold text-brown flex items-center gap-3">
+                                    <i class="fas fa-receipt text-yellow-600"></i>
+                                    Chi tiết Đơn hàng #<?php echo $order_id; ?>
+                                </h1>
+                                <div id="order-status-badge" class="text-yellow-700 bg-yellow-100 px-3 py-1 rounded-full text-sm font-semibold">
+                                    <i class="fas fa-clock mr-1"></i>
+                                    Chờ xử lý
                                 </div>
                             </div>
 
-                            <div class="p-6">
                                 <!-- Customer Info -->
                                 <div class="mb-6">
-                                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-                                        <i class="fas fa-user text-green-500"></i>
+                                    <h3 class="text-xl font-bold text-brown mb-3 flex items-center gap-2">
+                                        <i class="fas fa-user text-yellow-700"></i>
                                         Thông tin khách hàng
                                     </h3>
-                                    <div class="bg-gray-50 rounded-xl p-4">
+                                    <div class="bg-yellow-50 rounded-xl p-4 text-gray-700">
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <p class="text-sm text-gray-600">Họ và tên</p>
-                                                <p class="font-medium"><?php echo $customer_info['name']; ?></p>
+                                                <p class="font-semibold text-brown"><?php echo htmlspecialchars($customer_info['full_name']); ?></p>
                                             </div>
                                             <div>
                                                 <p class="text-sm text-gray-600">Số điện thoại</p>
-                                                <p class="font-medium"><?php echo $customer_info['phone']; ?></p>
+                                                <p class="font-semibold text-brown"><?php echo htmlspecialchars($customer_info['phone']); ?></p>
                                             </div>
                                             <div class="md:col-span-2">
                                                 <p class="text-sm text-gray-600">Email</p>
-                                                <p class="font-medium"><?php echo $customer_info['email']; ?></p>
+                                                <p class="font-semibold text-brown"><?php echo htmlspecialchars($customer_info['email']); ?></p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Shipping Info -->
-                                <div class="mb-6">
-                                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-                                        <i class="fas fa-truck text-blue-500"></i>
+                                <div class="mb-8">
+                                    <h3 class="text-xl font-bold text-brown mb-3 flex items-center gap-2">
+                                        <i class="fas fa-truck text-yellow-700"></i>
                                         Địa chỉ giao hàng
                                     </h3>
-                                    <div class="bg-blue-50 rounded-xl p-4">
-                                        <p class="font-medium"><?php echo $order_info['shipping_address']; ?></p>
-                                        <?php if (!empty($customer_info['notes'])): ?>
-                                            <div class="mt-3 pt-3 border-t border-blue-200">
+                                    <div class="bg-yellow-50 rounded-xl p-4 text-gray-700">
+                                        <p class="font-semibold text-brown"><?php echo htmlspecialchars($order_info['address'] ?? 'Nhận tại quầy'); ?></p>
+                                        <?php if (!empty($notes)): ?>
+                                            <div class="mt-3 pt-3 border-t border-yellow-200">
                                                 <p class="text-sm text-gray-600">Ghi chú:</p>
-                                                <p class="text-sm"><?php echo $customer_info['notes']; ?></p>
+                                                <p class="text-sm italic">"<?php echo htmlspecialchars($notes); ?>"</p>
                                             </div>
                                         <?php endif; ?>
                                     </div>
                                 </div>
 
                                 <!-- Payment Info -->
-                                <div class="mb-6">
-                                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-                                        <i class="fas fa-money-bill-wave text-orange-500"></i>
+                                <div class="mb-8">
+                                    <h3 class="text-xl font-bold text-brown mb-3 flex items-center gap-2">
+                                        <i class="fas fa-money-bill-wave text-yellow-700"></i>
                                         Phương thức thanh toán
                                     </h3>
-                                    <div class="bg-orange-50 rounded-xl p-4">
+                                    <div class="bg-yellow-50 rounded-xl p-4">
                                         <div class="flex items-center gap-3">
                                             <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
                                                 <i class="fas fa-money-bill-alt text-green-600"></i>
@@ -163,48 +166,51 @@ $customer_info = json_decode($order_info['customer_info'], true);
                                 </div>
 
                                 <!-- Next Steps -->
-                                <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-                                    <h4 class="font-bold text-yellow-800 mb-2">Các bước tiếp theo:</h4>
-                                    <ul class="text-yellow-700 space-y-1 text-sm">
+                                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                                    <h4 class="font-bold text-amber-800 mb-2">Các bước tiếp theo:</h4>
+                                    <ul class="text-amber-700 space-y-1 text-sm list-disc list-inside">
                                         <li>• Chúng tôi sẽ gọi điện xác nhận đơn hàng trong 30 phút</li>
                                         <li>• Thời gian giao hàng: 1-3 ngày làm việc</li>
                                         <li>• Vui lòng chuẩn bị tiền mặt khi nhận hàng</li>
                                         <li>• Kiểm tra kỹ sản phẩm trước khi thanh toán</li>
                                     </ul>
                                 </div>
-                            </div>
                         </div>
-                    </div>
 
                     <!-- Order Summary -->
                     <div class="lg:col-span-1">
-                        <div class="bg-white rounded-3xl shadow-2xl p-6 sticky top-6">
-                            <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                                <i class="fas fa-shopping-bag text-orange-500"></i>
+                        <div class="bg-white rounded-2xl shadow-xl p-6 sticky top-24">
+                            <h2 class="text-2xl font-bold text-brown mb-6 flex items-center gap-2">
+                                <i class="fas fa-shopping-bag text-yellow-600"></i>
                                 Tóm tắt đơn hàng
                             </h2>
 
                             <!-- Order Items -->
-                            <div class="space-y-3 mb-6">
+                            <div class="space-y-4 mb-6 max-h-80 overflow-y-auto pr-2">
                                 <?php
                                 try {
-                                    $stmt = $conn->prepare("SELECT oi.*, p.name FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?");
+                                    $stmt = $conn->prepare(
+                                        "SELECT oi.*, p.name, p.image, ps.size_name 
+                                         FROM order_items oi 
+                                         JOIN products p ON oi.product_id = p.product_id 
+                                         LEFT JOIN product_sizes ps ON oi.size_id = ps.size_id
+                                         WHERE oi.order_id = ?"
+                                    );
                                     $stmt->bind_param("i", $order_id);
                                     $stmt->execute();
                                     $result = $stmt->get_result();
 
                                     while ($item = $result->fetch_assoc()):
                                 ?>
-                                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                                        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                                            <i class="fas fa-box text-gray-400"></i>
-                                        </div>
+                                    <div class="flex items-center gap-3 p-3 bg-yellow-50 rounded-xl">
+                                        <img src="<?php echo $base_url . '/' . ($item['image'] ?: 'Photos/placeholder.png'); ?>" class="w-12 h-12 object-cover rounded-lg" alt="<?php echo htmlspecialchars($item['name']); ?>" />
                                         <div class="flex-1">
-                                            <h4 class="font-medium text-sm"><?php echo $item['name']; ?></h4>
-                                            <p class="text-xs text-gray-600">SL: <?php echo $item['quantity']; ?></p>
+                                            <h4 class="font-semibold text-sm text-brown leading-tight"><?php echo htmlspecialchars($item['name']); ?></h4>
+                                            <?php if (!empty($item['size_name'])): ?><p class="text-xs text-gray-500 font-semibold">Size: <?php echo htmlspecialchars($item['size_name']); ?></p><?php endif; ?>
+                                            <p class="text-xs text-gray-600">SL: <?php echo htmlspecialchars($item['quantity']); ?></p>
                                         </div>
                                         <div class="text-right">
-                                            <p class="font-bold text-sm"><?php echo number_format($item['price'] * $item['quantity']); ?>đ</p>
+                                            <p class="font-bold text-sm text-brown"><?php echo number_format($item['price'] * $item['quantity'], 0, ',', '.'); ?>đ</p>
                                         </div>
                                     </div>
                                 <?php endwhile; } catch (Exception $e) { ?>
@@ -213,25 +219,35 @@ $customer_info = json_decode($order_info['customer_info'], true);
                             </div>
 
                             <!-- Order Total -->
-                            <div class="border-t pt-4">
-                                <div class="flex justify-between items-center text-lg font-bold">
-                                    <span>Tổng cộng:</span>
-                                    <span class="text-orange-600"><?php echo number_format($order_info['total_amount']); ?>đ</span>
+                            <div class="border-t-2 border-dashed border-yellow-200 pt-4 space-y-2">
+                                <div class="flex justify-between items-center text-gray-600">
+                                    <span>Tạm tính:</span>
+                                    <span class="font-semibold"><?php echo number_format($order_info['total'] + ($order_info['discount_amount'] ?? 0), 0, ',', '.'); ?>đ</span>
                                 </div>
+                                <?php if ($order_info['voucher_code']): ?>
+                                    <div class="flex justify-between items-center text-green-600 font-semibold">
+                                        <span>Giảm giá (<?php echo htmlspecialchars($order_info['voucher_code']); ?>):</span>
+                                        <span class="font-bold">-<?php echo number_format($order_info['discount_amount'], 0, ',', '.'); ?>đ</span>
+                                    </div>
+                                <?php endif; ?>
                                 <div class="flex justify-between items-center text-sm text-gray-600 mt-1">
                                     <span>Phí vận chuyển:</span>
-                                    <span>Miễn phí</span>
+                                    <span class="font-semibold">Miễn phí</span>
+                                </div>
+                                <div class="border-t pt-3 mt-3 flex justify-between items-center text-xl font-bold">
+                                    <span class="text-brown">Thành tiền:</span>
+                                    <span class="text-yellow-700"><?php echo number_format($order_info['total'], 0, ',', '.'); ?>đ</span>
                                 </div>
                             </div>
 
                             <!-- Actions -->
                             <div class="mt-6 space-y-3">
-                                <a href="../orders/" class="w-full btn-success text-white py-3 rounded-xl font-bold text-center block">
+                                <a href="../../orders.php" class="w-full cta-button text-white py-3 rounded-full font-bold text-center block shadow-lg hover:shadow-xl transition-all">
                                     <i class="fas fa-list mr-2"></i>
                                     Xem đơn hàng
                                 </a>
 
-                                <a href="../../products.php" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-bold text-center block transition-colors">
+                                <a href="/SE_Final-master/index.php" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-full font-bold text-center block transition-colors">
                                     <i class="fas fa-store mr-2"></i>
                                     Tiếp tục mua sắm
                                 </a>
@@ -239,12 +255,11 @@ $customer_info = json_decode($order_info['customer_info'], true);
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
-    </div>
+    </main>
 
     <!-- Footer -->
-    <?php include '../../includes/footer.php'; ?>
+    <?php include_once __DIR__ . '/../../../../includes/footer.php'; ?>
 
     <script>
         // Auto refresh order status every 30 seconds
@@ -258,11 +273,16 @@ $customer_info = json_decode($order_info['customer_info'], true);
                 .then(response => response.json())
                 .then(data => {
                     if (data.status !== 'pending') {
-                        // Update status display
-                        const statusElement = document.querySelector('.fa-clock').parentElement;
-                        if (data.status === 'confirmed') {
-                            statusElement.innerHTML = '<i class="fas fa-check-circle mr-1"></i>Đã xác nhận';
-                            statusElement.className = 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm';
+                        const statusBadge = document.getElementById('order-status-badge');
+                        if (data.status === 'processing') {
+                            statusBadge.innerHTML = '<i class="fas fa-sync-alt fa-spin mr-1"></i>Đang xử lý';
+                            statusBadge.className = 'text-blue-700 bg-blue-100 px-3 py-1 rounded-full text-sm font-semibold';
+                        } else if (data.status === 'completed') {
+                            statusBadge.innerHTML = '<i class="fas fa-check-circle mr-1"></i>Đã giao';
+                            statusBadge.className = 'text-green-700 bg-green-100 px-3 py-1 rounded-full text-sm font-semibold';
+                        } else if (data.status === 'cancelled') {
+                            statusBadge.innerHTML = '<i class="fas fa-times-circle mr-1"></i>Đã hủy';
+                            statusBadge.className = 'text-red-700 bg-red-100 px-3 py-1 rounded-full text-sm font-semibold';
                         }
                     }
                 })
@@ -281,17 +301,3 @@ $customer_info = json_decode($order_info['customer_info'], true);
     </script>
 </body>
 </html>
-
-<?php
-session_start();
-include_once __DIR__ . '/../../../../database/db_connection.php';
-$order_id = $_GET['order_id'] ?? null;
-if (!$order_id) {
-    echo 'Thiếu mã đơn hàng.';
-    exit;
-}
-$sql = 'UPDATE orders SET status = "processing" WHERE order_id = ?';
-$stmt = $conn->prepare($sql);
-$stmt->bind_param('i', $order_id);
-$stmt->execute();
-echo 'Đơn hàng đã được xác nhận. Cảm ơn bạn!';

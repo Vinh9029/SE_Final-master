@@ -21,6 +21,9 @@ if (!isset($_SESSION['user_id'])) {
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
+        body {
+            background-color: #E6D3B1;
+        }
         .cta-button {
             background: linear-gradient(135deg, #4B2E05 0%, #C4A35A 100%);
         }
@@ -30,20 +33,20 @@ if (!isset($_SESSION['user_id'])) {
         }
 
         .cart-item-anim {
-            transition: box-shadow 0.2s, background 0.2s;
+            transition: box-shadow 0.3s, background-color 0.3s;
         }
 
         .cart-item-anim:hover {
-            box-shadow: 0 8px 32px 0 rgba(255, 107, 107, 0.15);
-            background: #fefbf5;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            background-color: #fffbeb;
         }
     </style>
 </head>
 
-<body class="bg-gray-50 min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col">
     <?php include '../../includes/header.php'; ?>
-    <main class="flex-1 bg-beige py-12">
-        <div class="container mx-auto px-4">
+    <main class="flex-1 py-12">
+        <div class="container mx-auto px-4 max-w-6xl">
             <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
                 <!-- Header -->
                 <div class="bg-gradient-to-r from-yellow-800 to-yellow-900 p-6">
@@ -52,7 +55,7 @@ if (!isset($_SESSION['user_id'])) {
                             <i class="fas fa-shopping-cart text-2xl"></i>
                             <h1 class="text-2xl font-bold">Giỏ hàng của bạn</h1>
                         </div>
-                        <div class="text-white">
+                        <div class="text-white text-right hidden md:block">
                             <span class="text-lg">Tổng cộng: </span>
                             <span class="text-2xl font-bold" id="cart-total">0đ</span>
                         </div>
@@ -61,7 +64,7 @@ if (!isset($_SESSION['user_id'])) {
                 <!-- Cart Items (Demo dữ liệu tĩnh, thay bằng PHP khi tích hợp backend) -->
                 <div class="p-6">
                     <!-- Cart Table Header -->
-                    <div class="mb-2 px-2">
+                    <div class="mb-2 px-4 hidden md:block">
                         <div class="grid grid-cols-12 items-center text-gray-500 font-semibold text-sm py-2 border-b border-gray-200">
                             <div class="col-span-5">Sản phẩm</div>
                             <div class="col-span-2 text-center">Đơn giá</div>
@@ -109,23 +112,20 @@ if (!isset($_SESSION['user_id'])) {
                         <div class="flex flex-col gap-2 w-full md:w-1/2">
                             <div class="flex justify-between mb-2">
                                 <span class="text-gray-700">Tổng số lượng món:</span>
-                                <span id="order-total-qty" class="font-bold">0</span>
+                                <span id="order-total-qty" class="font-semibold text-gray-800">0</span>
                             </div>
                             <div class="flex justify-between mb-2">
                                 <span class="text-gray-700">Tổng tiền:</span>
-                                <span id="order-total-before" class="font-bold">0đ</span>
+                                <span id="order-total-before" class="font-semibold text-gray-800">0đ</span>
                             </div>
                             <div class="flex justify-between mb-2">
                                 <span class="text-gray-700">Giảm giá:</span>
-                                <span id="order-discount" class="font-bold text-green-600">0đ</span>
+                                <span id="order-discount" class="font-bold text-green-600">- 0đ</span>
                             </div>
-                            <div class="flex justify-between mb-2" id="shipping-row" style="display:none;">
-                                <span class="text-gray-700">Phí giao hàng:</span>
-                                <span id="order-shipping" class="font-bold">15,000đ</span>
-                            </div>
-                            <div class="flex justify-between mb-2">
-                                <span class="text-gray-700">Tổng thanh toán:</span>
-                                <span id="order-total-after" class="font-bold text-yellow-800">0đ</span>
+                            <div class="border-t-2 border-dashed border-yellow-200 my-2"></div>
+                            <div class="flex justify-between items-center text-xl mt-2">
+                                <span class="font-bold text-brown">Tổng thanh toán:</span>
+                                <span id="order-total-after" class="font-bold text-yellow-800 text-2xl">0đ</span>
                             </div>
                         </div>
                     </div>
@@ -136,7 +136,7 @@ if (!isset($_SESSION['user_id'])) {
                                 class="fas fa-arrow-left mr-2"></i>Tiếp tục mua sắm</a>
                         <div class="flex flex-col sm:flex-row gap-4">
                             <button
-                                class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-full font-bold transition-colors"><i
+                                class="bg-red-100 hover:bg-red-200 text-red-700 px-6 py-3 rounded-full font-bold transition-colors clear-cart-btn"><i
                                     class="fas fa-trash mr-2"></i>Xóa tất cả</button>
                             <a href="checkout/index.php"
                                 class="cta-button text-white px-8 py-3 rounded-full font-bold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"><i
@@ -420,7 +420,7 @@ if (!isset($_SESSION['user_id'])) {
             if (appliedVoucherCode && total >= appliedVoucherMinOrder) {
                 if (appliedVoucherType === 'percent') {
                     discount = Math.round(total * appliedVoucherDiscount / 100);
-                } else if (appliedVoucherType === 'cash') {
+                } else if (appliedVoucherType === 'fixed') {
                     discount = appliedVoucherDiscount;
                 }
             }
@@ -429,9 +429,7 @@ if (!isset($_SESSION['user_id'])) {
             document.getElementById('order-total-qty').textContent = totalQty;
             document.getElementById('order-total-before').textContent = new Intl.NumberFormat('vi-VN').format(total) + 'đ';
             document.getElementById('order-discount').textContent = '-' + new Intl.NumberFormat('vi-VN').format(discount) + 'đ';
-            document.getElementById('order-shipping').textContent = shipping === 0 ? '' : new Intl.NumberFormat('vi-VN').format(shipping) + 'đ';
-            document.getElementById('shipping-row').style.display = 'none';
-            document.getElementById('order-total-after').textContent = new Intl.NumberFormat('vi-VN').format(totalAfter) + 'đ';
+            document.getElementById('order-total-after').textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalAfter);
         }
         // Initial call to calculate total when page loads
         document.addEventListener('DOMContentLoaded', function() {

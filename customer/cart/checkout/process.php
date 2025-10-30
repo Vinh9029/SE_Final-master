@@ -38,6 +38,24 @@ if (empty($cart_items)) {
     echo json_encode(['success' => false, 'message' => 'Giỏ hàng trống']);
     exit;
 }
+
+// Lấy voucher từ session và tính toán giảm giá
+$voucher_code = $_SESSION['voucher_code'] ?? null;
+$voucher_discount_value = $_SESSION['voucher_discount_value'] ?? 0;
+$voucher_type = $_SESSION['voucher_type'] ?? 'cash';
+$voucher_min_order = (float) ($_SESSION['voucher_min_order'] ?? 0);
+$discount_amount = 0;
+
+if ($voucher_code && $total >= $voucher_min_order) {
+    if ($voucher_type === 'percent') {
+        $discount_amount = round($total * $voucher_discount_value / 100);
+    } else { // 'fixed'
+        $discount_amount = $voucher_discount_value;
+    }
+}
+
+$final_total = $total - $discount_amount;
+
 // Cập nhật thông tin cá nhân nếu có thay đổi
 $stmt = $conn->prepare('SELECT full_name, phone, address FROM users WHERE user_id = ?');
 $stmt->bind_param('i', $user_id);
@@ -52,10 +70,11 @@ if ($user) {
         $stmt2->close();
     }
 }
+
 // Tạo đơn hàng
-$sql = 'INSERT INTO orders (user_id, order_date, status, total) VALUES (?, NOW(), "pending", ?)';
+$sql = 'INSERT INTO orders (user_id, order_date, status, total, voucher_code, discount_amount) VALUES (?, NOW(), "pending", ?, ?, ?)';
 $stmt = $conn->prepare($sql);
-$stmt->bind_param('id', $user_id, $total);
+$stmt->bind_param('idssd', $user_id, $final_total, $voucher_code, $discount_amount);
 $stmt->execute();
 $order_id = $conn->insert_id;
 
@@ -87,10 +106,12 @@ $stmt->execute();
 // Trả về kết quả
 if ($payment_method === 'vnpay') {
     // Chuyển hướng sang VNPay
-    $payment_url = 'payment/vnpay.php?order_id=' . $order_id;
-    echo json_encode(['success' => true, 'payment_url' => $payment_url]);
+    $redirect_url = 'payment/vnpay.php?order_id=' . $order_id;
+    echo json_encode(['success' => true, 'redirect_url' => $redirect_url]);
 } else {
-    echo json_encode(['success' => true]);
+    // Chuyển hướng sang trang xác nhận thanh toán tiền mặt
+    $redirect_url = 'payment/cash.php?order_id=' . $order_id;
+    echo json_encode(['success' => true, 'redirect_url' => $redirect_url]);
 }
 exit;
 ?>

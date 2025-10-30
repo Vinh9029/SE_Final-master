@@ -40,6 +40,9 @@ while ($item = $res->fetch_assoc()) {
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        body {
+            background-color: #E6D3B1;
+        }
         .cta-button {
             background: linear-gradient(135deg, #4B2E05 0%, #C4A35A 100%);
         }
@@ -57,20 +60,21 @@ while ($item = $res->fetch_assoc()) {
         }
 
         .payment-method.active {
-            border: 3px solid #ff6b6b;
-            background: #fff5f5;
+            border-color: #C4A35A !important;
+            background-color: #fffbeb !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
     </style>
 </head>
 
-<body class="bg-beige">
+<body>
     <!-- Header -->
     <?php include '../../../includes/header.php'; ?>
 
     <!-- Checkout Section -->
-    <div class="checkout-container min-h-screen py-12 bg-beige">
+    <div class="checkout-container min-h-screen py-12">
         <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
                 <!-- Checkout Form -->
                 <div class="lg:col-span-2">
                     <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
@@ -84,7 +88,7 @@ while ($item = $res->fetch_assoc()) {
 
                         <form id="checkout-form" class="p-6">
                             <!-- Customer Information -->
-                            <div class="mb-8">
+                            <div class="mb-6">
                                 <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                                     <i class="fas fa-user text-yellow-800"></i>
                                     Thông tin khách hàng
@@ -114,14 +118,14 @@ while ($item = $res->fetch_assoc()) {
                             <!-- Shipping Information -->
                             <div class="mb-6">
                                 <h2 class="text-xl font-bold text-yellow-900 mb-4 flex items-center gap-2">
-                                    <i class="fas fa-store text-yellow-800"></i>
+                                    <i class="fas fa-shipping-fast text-yellow-800"></i>
                                     Phương thức nhận hàng
                                 </h2>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <!-- Nhận tại quầy -->
-                                    <div class="delivery-method border-2 border-gray-200 rounded-2xl p-4 cursor-pointer transition hover:border-pink-400"
-                                        onclick="selectDelivery('pickup')">
-                                        <label class="flex items-center gap-3">
+                                    <div class="delivery-method payment-method border-2 border-gray-200 rounded-2xl p-4 cursor-pointer"
+                                        onclick="selectDelivery('pickup', this)">
+                                        <label class="flex items-center gap-3 cursor-pointer">
                                             <input type="radio" name="delivery_method" value="pickup" class="accent-yellow-600"
                                                 checked onclick="showAddress(false)">
                                             <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center">
@@ -134,9 +138,9 @@ while ($item = $res->fetch_assoc()) {
                                         </label>
                                     </div>
                                     <!-- Giao tận nơi -->
-                                    <div class="delivery-method border-2 border-gray-200 rounded-2xl p-4 cursor-pointer transition hover:border-pink-400"
-                                        onclick="selectDelivery('delivery')">
-                                        <label class="flex items-center gap-3">
+                                    <div class="delivery-method payment-method border-2 border-gray-200 rounded-2xl p-4 cursor-pointer"
+                                        onclick="selectDelivery('delivery', this)">
+                                        <label class="flex items-center gap-3 cursor-pointer">
                                             <input type="radio" name="delivery_method" value="delivery" class="accent-yellow-600"
                                                 onclick="showAddress(true)">
                                             <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
@@ -151,9 +155,9 @@ while ($item = $res->fetch_assoc()) {
                                 </div>
                             </div>
                             <!-- Địa chỉ giao hàng -->
-                            <div id="address-card" class="mb-6">
+                            <div id="address-card" class="mb-6 bg-yellow-50 p-6 rounded-2xl border border-yellow-200" style="display: none;">
                                 <!-- Shipping Information -->
-                                <div class="mb-8">
+                                <div>
                                     <h2 class="text-xl font-bold text-yellow-900 mb-4 flex items-center gap-2">
                                         <i class="fas fa-truck text-yellow-800"></i>
                                         Địa chỉ giao hàng
@@ -203,7 +207,7 @@ while ($item = $res->fetch_assoc()) {
                                 </div>
                             </div>
                             <!-- Payment Methods -->
-                            <div class="mb-8">
+                            <div class="mb-6">
                                 <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                                     <i class="fas fa-money-bill-wave text-yellow-800"></i>
                                     Phương thức thanh toán
@@ -211,7 +215,7 @@ while ($item = $res->fetch_assoc()) {
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <!-- Cash Payment -->
-                                    <div class="payment-method border-2 border-gray-200 rounded-2xl p-4 cursor-pointer" onclick="selectPayment('cash')">
+                                    <div class="payment-method border-2 border-gray-200 rounded-2xl p-4 cursor-pointer" onclick="selectPayment('cash', this)">
                                         <div class="flex items-center gap-3">
                                             <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                                                 <i class="fas fa-money-bill-alt text-green-600 text-xl"></i>
@@ -224,7 +228,7 @@ while ($item = $res->fetch_assoc()) {
                                     </div>
 
                                     <!-- VNPay Payment -->
-                                    <div class="payment-method border-2 border-gray-200 rounded-2xl p-4 cursor-pointer" onclick="selectPayment('vnpay')">
+                                    <div class="payment-method border-2 border-gray-200 rounded-2xl p-4 cursor-pointer" onclick="selectPayment('vnpay', this)">
                                         <div class="flex items-center gap-3">
                                             <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                                                 <i class="fas fa-qrcode text-blue-600 text-xl"></i>
@@ -241,8 +245,8 @@ while ($item = $res->fetch_assoc()) {
                             </div>
 
                             <!-- Submit Button -->
-                            <div class="flex justify-between items-center mb-4">
-                                <a href="../index.php" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-full font-bold transition-colors flex items-center gap-2"><i class="fas fa-arrow-left"></i> Quay lại giỏ hàng</a>
+                            <div class="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+                                <a href="../index.php" class="text-gray-600 hover:text-yellow-800 font-semibold transition-colors flex items-center gap-2"><i class="fas fa-arrow-left"></i> Quay lại giỏ hàng</a>
                                 <button type="submit" class="cta-button text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2">
                                     <i class="fas fa-shopping-cart mr-2"></i>
                                     Đặt hàng ngay
@@ -254,30 +258,30 @@ while ($item = $res->fetch_assoc()) {
 
                 <!-- Order Summary -->
                 <div class="lg:col-span-1">
-                    <div class="bg-white rounded-3xl shadow-2xl p-6 sticky top-6">
-                        <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                    <div class="bg-white rounded-2xl shadow-xl p-6 sticky top-24">
+                        <h2 class="text-2xl font-bold text-brown mb-6 flex items-center gap-2">
                             <i class="fas fa-receipt text-yellow-800"></i>
-                            Đơn hàng
+                            Tóm tắt đơn hàng
                         </h2>
 
                         <!-- Order Items -->
-                        <div class="space-y-4 mb-6">
+                        <div class="space-y-4 mb-6 max-h-80 overflow-y-auto pr-2">
                             <?php foreach ($cart_items as $item): ?>
-                                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                                <div class="flex items-center gap-3 p-3 bg-yellow-50 rounded-xl">
                                     <div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
                                         <img src="<?php echo $base_url . '/' . ($item['image'] ?: 'Photos/placeholder.png'); ?>" class="w-12 h-12 object-cover rounded-lg" alt="<?php echo htmlspecialchars($item['name']); ?>" />
                                     </div>
                                     <div class="flex-1">
                                         <h4 class="font-medium text-sm leading-tight"><?php echo htmlspecialchars($item['name']); ?></h4>
-                                        <?php if (!empty($item['size_name'])): ?>
+                                        <?php if (!empty($item['size_name'])) : ?>
                                             <p class="text-xs text-gray-500 font-semibold">Size: <?php echo htmlspecialchars($item['size_name']); ?></p>
                                         <?php endif; ?>
                                         <p class="text-xs text-gray-600 mt-1">
                                             SL: <span class="font-bold"><?php echo $item['quantity']; ?></span>
                                         </p>
                                     </div>
-                                    <div class="text-right">
-                                        <p class="font-bold text-yellow-800"><?php echo number_format($item['price'] * $item['quantity']); ?>đ</p>
+                                    <div class="text-right font-semibold">
+                                        <p class="font-bold text-brown"><?php echo number_format($item['price'] * $item['quantity']); ?>đ</p>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -286,15 +290,15 @@ while ($item = $res->fetch_assoc()) {
                         <?php 
                         // Giả sử voucher đã áp dụng lưu trong session
                         $voucher_code = $_SESSION['voucher_code'] ?? null;
-                        $voucher_discount = $_SESSION['voucher_discount'] ?? 0;
-                        $voucher_type = $_SESSION['voucher_type'] ?? 'percent';
-                        $voucher_min_order = $_SESSION['voucher_min_order'] ?? 0;
+                        $voucher_discount_value = $_SESSION['voucher_discount_value'] ?? 0;
+                        $voucher_type = $_SESSION['voucher_type'] ?? 'cash';
+                        $voucher_min_order = (float) ($_SESSION['voucher_min_order'] ?? 0);
                         $discount = 0;
                         if ($voucher_code && $total >= $voucher_min_order) {
                             if ($voucher_type === 'percent') {
-                                $discount = round($total * $voucher_discount / 100);
+                                $discount = round($total * $voucher_discount_value / 100);
                             } else {
-                                $discount = $voucher_discount;
+                                $discount = $voucher_discount_value;
                             }
                         }
                         $shipping_fee = 0;
@@ -303,34 +307,30 @@ while ($item = $res->fetch_assoc()) {
                         }
                         $total_after = $total - $discount + $shipping_fee;
                         ?>
-                        <div class="border-t pt-4">
-                            <div class="flex justify-between items-center text-lg font-bold">
-                                <span>Tổng cộng:</span>
-                                <span class="text-yellow-800" id="order-total"><?php echo number_format($total); ?>đ</span>
+                        <div class="border-t-2 border-dashed border-yellow-200 pt-4 space-y-2">
+                            <div class="flex justify-between items-center text-gray-600">
+                                <span>Tạm tính:</span>
+                                <span class="font-semibold" id="order-total"><?php echo number_format($total); ?>đ</span>
                             </div>
-                            <?php if ($voucher_code && $total >= $voucher_min_order): ?>
-                            <div class="flex justify-between items-center text-base mt-2">
-                                <span class="text-green-600 font-semibold">Mã giảm giá đã áp dụng:</span>
-                                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold"><?php echo htmlspecialchars($voucher_code); ?></span>
-                            </div>
-                            <div class="flex justify-between items-center text-base mt-2">
-                                <span class="text-gray-700">Giảm giá:</span>
-                                <span class="text-green-600 font-bold" id="order-discount">- <?php echo number_format($discount); ?>đ</span>
-                            </div>
-                            <?php elseif ($voucher_code): ?>
-                            <div class="flex justify-between items-center text-base mt-2">
-                                <span class="text-red-600 font-semibold">Mã giảm giá không hợp lệ:</span>
-                                <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full font-bold"><?php echo htmlspecialchars($voucher_code); ?></span>
-                            </div>
-                            <div class="text-xs text-red-500 text-right mt-1">Đơn hàng chưa đạt giá trị tối thiểu <?php echo number_format($voucher_min_order); ?>đ</div>
+                            <?php if ($voucher_code && $total >= $voucher_min_order) : ?>
+                                <div class="flex justify-between items-center text-green-600 font-semibold">
+                                    <span>Giảm giá (<?php echo htmlspecialchars($voucher_code); ?>):</span>
+                                    <span class="font-bold" id="order-discount">- <?php echo number_format($discount); ?>đ</span>
+                                </div>
+                            <?php elseif ($voucher_code) : ?>
+                                <div class="flex justify-between items-center text-red-600">
+                                    <span>Voucher không hợp lệ:</span>
+                                    <span class="font-bold"><?php echo htmlspecialchars($voucher_code); ?></span>
+                                </div>
+                                <div class="text-xs text-red-500 text-right">Đơn hàng chưa đạt giá trị tối thiểu <?php echo number_format($voucher_min_order); ?>đ</div>
                             <?php endif; ?>
-                            <div class="flex justify-between items-center text-base mt-2" id="shipping-row" style="display: none;">
-                                <span class="text-gray-700">Phí giao hàng:</span>
-                                <span class="text-yellow-800 font-bold" id="order-shipping"></span>
+                            <div class="flex justify-between items-center text-gray-600" id="shipping-row" style="display: none;">
+                                <span>Phí giao hàng:</span>
+                                <span class="font-semibold" id="order-shipping"></span>
                             </div>
-                            <div class="flex justify-between items-center text-lg font-bold mt-2">
-                                <span>Tổng thanh toán:</span>
-                                <span class="text-yellow-900" id="order-total-after"><?php echo number_format($total_after); ?>đ</span>
+                            <div class="border-t pt-3 mt-3 flex justify-between items-center text-xl font-bold">
+                                <span class="text-brown">Thành tiền:</span>
+                                <span class="text-yellow-800" id="order-total-after"><?php echo number_format($total_after); ?>đ</span>
                             </div>
                         </div>
                     </div>
@@ -343,49 +343,64 @@ while ($item = $res->fetch_assoc()) {
     <?php include '../../../includes/footer.php'; ?>
 
     <script>
+        // --- UI/UX Functions ---
+        function showMessage(msg, type = 'success') {
+            let msgBox = document.getElementById('checkout-message');
+            if (!msgBox) {
+                msgBox = document.createElement('div');
+                msgBox.id = 'checkout-message';
+                msgBox.className = 'fixed top-6 left-1/2 transform -translate-x-1/2 z-[9999] px-6 py-3 rounded-xl shadow-lg text-lg font-bold text-white transition-all duration-300';
+                document.body.appendChild(msgBox);
+            }
+            msgBox.textContent = msg;
+            // Sử dụng màu sắc phù hợp với thương hiệu
+            msgBox.style.background = type === 'success' ? 'linear-gradient(90deg, #43e97b 0%, #38f9d7 100%)' : 'linear-gradient(90deg, #ff6a6a 0%, #ee5a24 100%)';
+            msgBox.style.opacity = '1';
+            msgBox.style.transform = 'translate(-50%, 0)';
+            setTimeout(() => {
+                msgBox.style.opacity = '0';
+                msgBox.style.transform = 'translate(-50%, -20px)';
+            }, 2500);
+        }
+
         // Ẩn/hiện địa chỉ giao hàng
         function showAddress(show) {
             const addressCard = document.getElementById('address-card');
             const addressInput = addressCard.querySelector('input[name="address"]');
+            const cityInput = addressCard.querySelector('select[name="city"]');
+            const districtInput = addressCard.querySelector('select[name="district"]');
+
             addressCard.style.display = show ? 'block' : 'none';
             if (show) {
                 addressInput.setAttribute('required', 'required');
+                cityInput.setAttribute('required', 'required');
+                districtInput.setAttribute('required', 'required');
             } else {
                 addressInput.removeAttribute('required');
+                cityInput.removeAttribute('required');
+                districtInput.removeAttribute('required');
             }
         }
-        // Mặc định hiển thị địa chỉ giao hàng
+        // Mặc định ẩn địa chỉ giao hàng
         showAddress(false);
 
+        function selectDelivery(method, element) {
+            document.querySelectorAll('.delivery-method').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+        }
+
         // Select payment method
-        function selectPayment(method) {
+        function selectPayment(method, element) {
             // Remove active class from all payment methods
             document.querySelectorAll('.payment-method').forEach(pm => {
                 pm.classList.remove('active');
             });
 
             // Add active class to selected method
-            event.currentTarget.classList.add('active');
+            element.classList.add('active');
 
             // Set payment method value
             document.getElementById('payment_method').value = method;
-
-            // Show different content based on payment method
-            if (method === 'vnpay') {
-                showVNPayInfo();
-            } else {
-                hideVNPayInfo();
-            }
-        }
-
-        function showVNPayInfo() {
-            // You can add VNPay specific information here
-            console.log('VNPay payment selected');
-        }
-
-        function hideVNPayInfo() {
-            // Hide VNPay specific information
-            console.log('Cash payment selected');
         }
 
         // Form submission
@@ -395,7 +410,7 @@ while ($item = $res->fetch_assoc()) {
             const paymentMethod = document.getElementById('payment_method').value;
             console.log('Submit checkout, paymentMethod:', paymentMethod);
             if (!paymentMethod) {
-                alert('Vui lòng chọn phương thức thanh toán');
+                showMessage('Vui lòng chọn phương thức thanh toán', 'error');
                 return;
             }
 
@@ -409,27 +424,26 @@ while ($item = $res->fetch_assoc()) {
                 .then(response => response.json())
                 .then(data => {
                     console.log('Response:', data);
-                    if (data.success) {
-                        // Hiển thị modal thành công
+                    if (data.success && data.redirect_url) { 
                         const modalHtml = `
                         <div id="successModal" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;z-index:9999;">
                             <div style="background:#fff;border-radius:16px;padding:32px 24px;box-shadow:0 8px 32px 0 rgba(31,38,135,0.18);display:flex;flex-direction:column;align-items:center;">
                                 <i class="fa-solid fa-circle-check" style="font-size:3rem;color:#4ade80;margin-bottom:12px;"></i>
-                                <div style="font-size:1.2rem;font-weight:600;color:#16a34a;margin-bottom:8px;">Thanh toán thành công!</div>
-                                <div style="color:#555;margin-bottom:18px;">Đang chuyển hướng về trang chủ...</div>
+                                <div style="font-size:1.2rem;font-weight:600;color:#16a34a;margin-bottom:8px;">Đặt hàng thành công!</div>
+                                <div style="color:#555;margin-bottom:18px;">Đang chuyển hướng đến trang xác nhận...</div>
                                 <div class="loader" style="width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #fc466b;border-radius:50%;animation:spin 1s linear infinite;"></div>
                             </div>
                         </div>
                         <style>@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}</style>`;
                         document.body.insertAdjacentHTML('beforeend', modalHtml);
-                        setTimeout(function(){window.location.href="../../../index.php";}, 1800);
+                        setTimeout(function(){window.location.href = data.redirect_url;}, 1800);
                     } else {
-                        alert('Có lỗi xảy ra: ' + data.message);
+                        showMessage(data.message || 'Có lỗi xảy ra khi xử lý đơn hàng.', 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Có lỗi xảy ra khi xử lý đơn hàng');
+                    showMessage('Có lỗi xảy ra khi xử lý đơn hàng.', 'error');
                 });
         });
 
@@ -452,32 +466,50 @@ while ($item = $res->fetch_assoc()) {
             }
         });
 
-        let shippingFee = 0;
+        // --- Order Summary Calculation ---
+        const totalFromServer = <?php echo json_encode($total); ?>;
+        const discountFromServer = <?php echo json_encode($discount); ?>;
+        let currentShippingFee = 0;
+
         function updateOrderSummary() {
-            // Lấy tổng tiền và discount từ PHP
-            const total = <?php echo json_encode($total); ?>;
-            const discount = <?php echo json_encode($discount); ?>;
-            const shipping = shippingFee;
-            const totalAfter = total - discount + shipping;
-            document.getElementById('order-total').textContent = new Intl.NumberFormat('vi-VN').format(total) + 'đ';
-            document.getElementById('order-discount').textContent = '-' + new Intl.NumberFormat('vi-VN').format(discount) + 'đ';
-            document.getElementById('order-shipping').textContent = shipping > 0 ? new Intl.NumberFormat('vi-VN').format(shipping) + 'đ' : '';
-            document.getElementById('order-total-after').textContent = new Intl.NumberFormat('vi-VN').format(totalAfter) + 'đ';
-            document.getElementById('shipping-row').style.display = shipping > 0 ? '' : 'none';
+            const total = totalFromServer;
+            const discount = discountFromServer;
+            const shipping = currentShippingFee;
+            const finalTotal = total - discount + shipping;
+
+            const shippingRow = document.getElementById('shipping-row');
+            const shippingValueEl = document.getElementById('order-shipping');
+            const totalAfterEl = document.getElementById('order-total-after');
+            const totalEl = document.getElementById('order-total');
+
+            if (shipping > 0) {
+                shippingValueEl.textContent = new Intl.NumberFormat('vi-VN').format(shipping) + 'đ';
+                shippingRow.style.display = 'flex';
+            } else {
+            }
+
+            totalAfterEl.textContent = new Intl.NumberFormat('vi-VN').format(finalTotal) + 'đ';
         }
+
         // Sự kiện chọn phương thức giao hàng
         const deliveryRadios = document.querySelectorAll('input[name="delivery_method"]');
         deliveryRadios.forEach(radio => {
             radio.addEventListener('change', function() {
+
+                // Calculation
                 if (this.value === 'delivery') {
-                    shippingFee = 15000;
+                    currentShippingFee = 15000;
                 } else {
-                    shippingFee = 0;
+                    currentShippingFee = 0;
                 }
                 updateOrderSummary();
             });
         });
-        // Khởi tạo lại khi load
+        // Khởi tạo lại khi load và chọn mặc định
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelector('input[name="delivery_method"][value="pickup"]').closest('.delivery-method').classList.add('active');
+            document.querySelector('input[name="payment_method"][value="cash"]').closest('.payment-method').classList.add('active');
+        });
         updateOrderSummary();
     </script>
 </body>
