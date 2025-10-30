@@ -207,3 +207,21 @@ CREATE TABLE comment_reactions (
 );
 
 ALTER TABLE users ADD COLUMN `deactivated_account` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '0: active, 1: deactivated';
+-- Cho phép cột user_id có giá trị NULL để áp dụng cho tất cả người dùng
+ALTER TABLE `vouchers` MODIFY COLUMN `user_id` INT NULL;
+
+-- Thêm cột `description` để lưu mô tả chi tiết cho voucher
+ALTER TABLE `vouchers` ADD COLUMN `description` TEXT NULL AFTER `code`;
+
+-- Đổi tên cột `discount_percent` để phù hợp hơn với các loại voucher khác nhau (ví dụ: freeship)
+-- và thay đổi kiểu dữ liệu để hỗ trợ giảm giá bằng số tiền cụ thể.
+ALTER TABLE `vouchers` CHANGE COLUMN `discount_percent` `discount_value` DECIMAL(10, 2) NOT NULL DEFAULT 0;
+
+-- Thêm cột `discount_type` để phân biệt giữa giảm giá theo % và giảm giá bằng số tiền cố định
+ALTER TABLE `vouchers` ADD COLUMN `discount_type` ENUM('percent', 'fixed') NOT NULL DEFAULT 'percent' AFTER `discount_value`;
+
+-- Đổi tên cột `program_name` thành `title` cho ngắn gọn và nhất quán
+ALTER TABLE `vouchers` CHANGE COLUMN `program_name` `title` VARCHAR(255) NULL;
+
+-- Cập nhật lại cột `expires_at` để có giá trị mặc định hợp lý hơn
+ALTER TABLE `vouchers` MODIFY COLUMN `expires_at` TIMESTAMP NULL DEFAULT NULL;

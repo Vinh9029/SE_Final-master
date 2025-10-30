@@ -6,7 +6,7 @@ $user_id = $_SESSION['user_id'] ?? null;
 $vouchers = [];
 if ($user_id) {
     // Lấy voucher của user và voucher toàn bộ (user_id IS NULL)
-    $stmt = $conn->prepare("SELECT * FROM vouchers WHERE user_id = ? OR user_id IS NULL ORDER BY created_at DESC");
+    $stmt = $conn->prepare("SELECT * FROM vouchers WHERE (user_id = ? OR user_id IS NULL) AND status != 'used' ORDER BY created_at DESC");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -31,7 +31,7 @@ if ($user_id) {
           </div>
           <div class="text-sm text-gray-700 mb-1"><?php echo isset($v['title']) ? htmlspecialchars($v['title']) : ''; ?></div>
           <div class="font-semibold text-yellow-600">
-            Giảm <?php echo number_format($v['discount_value']); ?><?php echo $v['discount_type'] === 'percent' ? '%' : 'đ'; ?>
+            Giảm <?php echo $v['discount_type'] === 'percent' ? $v['discount_value'] . '%' : number_format($v['discount_value'], 0, ',', '.') . 'đ'; ?>
           </div>
           <?php if ($v['min_order_value'] > 0): ?>
             <div class="text-xs text-gray-500">Áp dụng cho đơn từ <?php echo number_format($v['min_order_value']); ?>đ</div>

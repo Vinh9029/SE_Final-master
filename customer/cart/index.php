@@ -81,7 +81,7 @@ if (!isset($_SESSION['user_id'])) {
                             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-2">
                                 <?php
                                 $user_id = $_SESSION['user_id'];
-                                $voucher_query = "SELECT voucher_id, code, discount_percent, program_name, min_order_value, expires_at, status FROM vouchers WHERE user_id = ? AND status = 'active' AND (expires_at IS NULL OR expires_at >= NOW()) ORDER BY expires_at ASC;";
+                                $voucher_query = "SELECT voucher_id, code, discount_value, discount_type, title, min_order_value, expires_at, status FROM vouchers WHERE (user_id = ? OR user_id IS NULL) AND status = 'active' AND (expires_at IS NULL OR expires_at >= NOW()) ORDER BY expires_at ASC;";
                                 $voucher_stmt = $conn->prepare($voucher_query);
                                 $voucher_stmt->bind_param('i', $user_id);
                                 $voucher_stmt->execute();
@@ -90,8 +90,8 @@ if (!isset($_SESSION['user_id'])) {
                                 ?>
                                     <button class="voucher-btn bg-gradient-to-r from-yellow-100 to-yellow-200 hover:from-yellow-200 hover:to-yellow-300 text-yellow-800 px-4 py-2 rounded-xl font-semibold shadow transition flex flex-col items-start border border-yellow-200" data-voucher="<?= htmlspecialchars($voucher['code']) ?>">
                                         <span class="text-base font-bold">Mã: <?= htmlspecialchars($voucher['code']) ?></span>
-                                        <span class="text-xs text-gray-600">Chương trình: <?= htmlspecialchars($voucher['program_name']) ?></span>
-                                        <span class="text-xs text-gray-600">Giảm: <?= $voucher['discount_percent'] > 0 ? $voucher['discount_percent'] . '%' : 'Voucher tiền mặt' ?></span>
+                                        <span class="text-xs text-gray-600">Chương trình: <?= htmlspecialchars($voucher['title']) ?></span>
+                                        <span class="text-xs text-gray-600">Giảm: <?= $voucher['discount_type'] === 'percent' ? $voucher['discount_value'] . '%' : number_format($voucher['discount_value'], 0, ',', '.') . 'đ' ?></span>
                                         <span class="text-xs text-gray-600">Đơn tối thiểu: <?= number_format($voucher['min_order_value'], 0, ',', '.') ?>đ</span>
                                         <span class="text-xs text-gray-600">HSD: <?= $voucher['expires_at'] ? date('d/m/Y', strtotime($voucher['expires_at'])) : 'Không giới hạn' ?></span>
                                     </button>
@@ -151,11 +151,20 @@ if (!isset($_SESSION['user_id'])) {
         <?php include_once __DIR__ . '/../../includes/footer.php'; ?>
     </main>
     <script>
+        <?php
+        // Lấy thông tin voucher từ session để đồng bộ giao diện khi tải lại trang
+        $voucher_code_session = $_SESSION['voucher_code'] ?? null;
+        $voucher_discount_value_session = $_SESSION['voucher_discount_value'] ?? 0;
+        $voucher_type_session = $_SESSION['voucher_type'] ?? 'percent';
+        $voucher_min_order_session = $_SESSION['voucher_min_order'] ?? 0;
+        ?>
+
         // --- VOUCHER UI/UX & AJAX LOADING ---
-        let appliedVoucherCode = null;
-        let appliedVoucherDiscount = 0;
-        let appliedVoucherMinOrder = 0;
-        let appliedVoucherType = 'percent';
+        // Khởi tạo giá trị từ session PHP
+        let appliedVoucherCode = <?= json_encode($voucher_code_session) ?>;
+        let appliedVoucherDiscount = <?= json_encode((float)$voucher_discount_value_session) ?>;
+        let appliedVoucherMinOrder = <?= json_encode((float)$voucher_min_order_session) ?>;
+        let appliedVoucherType = <?= json_encode($voucher_type_session) ?>;
 
         function showMessage(msg, type = 'success') {
             let msgBox = document.getElementById('cart-message');
@@ -218,6 +227,16 @@ if (!isset($_SESSION['user_id'])) {
             setTimeout(() => modal.classList.remove('opacity-0', 'scale-95'), 10);
         }
 
+        // Hàm này sẽ được gọi khi trang tải xong để cập nhật UI voucher nếu có
+        function initializeVoucherUI() {
+            if (appliedVoucherCode) {
+                const appliedBtn = document.querySelector(`.voucher-btn[data-voucher="${appliedVoucherCode}"]`);
+                if (appliedBtn) {
+                    appliedBtn.classList.add('ring-2', 'ring-yellow-700');
+                }
+                updateAppliedVoucherUI(appliedVoucherCode);
+            }
+        }
         // Voucher click
         document.querySelectorAll('.voucher-btn').forEach(btn => {
             btn.onclick = function() {
@@ -239,10 +258,10 @@ if (!isset($_SESSION['user_id'])) {
                             document.querySelectorAll('.voucher-btn').forEach(b => b.classList.remove('ring-2', 'ring-yellow-700'));
                             btn.classList.add('ring-2', 'ring-yellow-700');
                             appliedVoucherCode = data.voucher.code;
-                            appliedVoucherDiscount = data.voucher.discount_percent;
+                            appliedVoucherDiscount = data.voucher.discount_value;
                             appliedVoucherMinOrder = data.voucher.min_order_value;
-                            appliedVoucherType = data.voucher.discount_percent > 0 ? 'percent' : 'cash'; // Giả sử chỉ có percent hoặc cash
-                            showMessage('Đã áp dụng mã giảm giá!', 'success');
+                            appliedVoucherType = data.voucher.discount_type;
+                            showMessage(data.message, 'success');
                             updateAppliedVoucherUI(data.voucher.code);
                         } else {
                             showMessage(data.message, 'error');
@@ -415,7 +434,10 @@ if (!isset($_SESSION['user_id'])) {
             document.getElementById('order-total-after').textContent = new Intl.NumberFormat('vi-VN').format(totalAfter) + 'đ';
         }
         // Initial call to calculate total when page loads
-        document.addEventListener('DOMContentLoaded', updateCartTotal);
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeVoucherUI(); // Cập nhật giao diện voucher trước
+            updateCartTotal(); // Sau đó tính toán lại tổng tiền
+        });
     </script>
 </body>
 

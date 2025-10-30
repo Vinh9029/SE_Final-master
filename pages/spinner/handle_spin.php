@@ -76,14 +76,14 @@ try {
         case 'freeship':
         case 'buy_one_get_one':
             $voucher_code = strtoupper(substr($prize_type, 0, 3)) . strtoupper(substr(uniqid(), 7, 6)); // Ví dụ: DIS..., FRE..., BUY...
-            $program_name = 'Vòng Quay May Mắn - ' . $prize_name;
+            $title = 'Vòng Quay May Mắn - ' . $prize_name;
             $expires_at = date('Y-m-d H:i:s', strtotime('+7 days')); // Hạn 7 ngày
 
             $stmt = $conn->prepare(
-                "INSERT INTO vouchers (user_id, code, discount_percent, program_name, min_order_value, status, expires_at, spin_id)
-                 VALUES (?, ?, ?, ?, ?, 'active', ?, ?)"
+                "INSERT INTO vouchers (user_id, code, discount_value, discount_type, title, min_order_value, status, expires_at, spin_id)
+                 VALUES (?, ?, ?, 'percent', ?, ?, 'active', ?, ?)"
             );
-            $stmt->bind_param('isdsisi', $user_id, $voucher_code, $prize_value, $program_name, $prize_min_order, $expires_at, $spin_id);
+            $stmt->bind_param('isdsisi', $user_id, $voucher_code, $prize_value, $title, $prize_min_order, $expires_at, $spin_id);
             $stmt->execute();
             $voucher_id = $conn->insert_id;
             $notification_related_id = $voucher_id; // Sử dụng voucher_id nếu voucher được tạo
