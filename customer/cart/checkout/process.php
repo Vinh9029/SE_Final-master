@@ -124,6 +124,12 @@ $stmt->execute();
     // Hoàn tất giao dịch
     $conn->commit();
 
+    // Xóa voucher khỏi session sau khi đã sử dụng thành công
+    unset($_SESSION['voucher_code']);
+    unset($_SESSION['voucher_discount_value']);
+    unset($_SESSION['voucher_type']);
+    unset($_SESSION['voucher_min_order']);
+
 } catch (Exception $e) {
     $conn->rollback();
     error_log("Checkout Error: " . $e->getMessage());

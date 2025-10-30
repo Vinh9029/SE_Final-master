@@ -34,9 +34,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!empty($customer_ids)) {
                     $notif_stmt = $conn->prepare("INSERT INTO notifications (customer_id, type, title, body, related_id, url) VALUES (?, 'new_voucher', ?, ?, ?, ?)");
-                    $notif_title = "Bạn có voucher mới!";
-                    $notif_body = "Bạn vừa nhận được voucher '{$code}' - {$title}. Dùng ngay!";
-                    $notif_url = "customer/account.php?tab=vouchers";
+                    $notif_title = "🎁 Voucher Mới: " . $title; // Tiêu đề thông báo sẽ chứa tên chương trình
+                    $notif_body = "Bạn vừa nhận được mã voucher '{$code}'. Dùng ngay để không bỏ lỡ ưu đãi!";
+                    $notif_url = "customer/account.php?page=vouchers"; // Sửa lại URL cho đúng với trang account
                     
                     foreach ($customer_ids as $customer_id) {
                         $notif_stmt->bind_param("isiss", $customer_id, $notif_title, $notif_body, $new_voucher_id, $notif_url);

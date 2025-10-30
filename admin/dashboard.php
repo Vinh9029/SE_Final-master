@@ -274,6 +274,33 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
               );
           });
       });
+
+      // Bind status change for orders
+      const statusSelects = document.querySelectorAll('#admin-main-content .order-status-select');
+      statusSelects.forEach(select => {
+          select.addEventListener('change', function(e) {
+              const orderId = this.dataset.orderId;
+              const newStatus = this.value;
+
+              const formData = new FormData();
+              formData.append('order_id', orderId);
+              formData.append('status', newStatus);
+
+              fetch(adminBaseUrl + 'orders/update_status.php', {
+                  method: 'POST',
+                  body: formData,
+                  headers: { 'X-Requested-With': 'XMLHttpRequest' }
+              })
+              .then(res => res.json())
+              .then(data => {
+                  if (data.success) {
+                      showToast(data.message, 'success');
+                  } else {
+                      showToast(data.message || 'Có lỗi xảy ra.', 'error');
+                  }
+              });
+          });
+      });
       // Bind form submissions for AJAX
       const forms = document.querySelectorAll('#admin-main-content form');
       forms.forEach(form => {

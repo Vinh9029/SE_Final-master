@@ -14,91 +14,6 @@ if (!$order_id) {
     exit;
 }
 
-// Handle status update
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status']) && isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-    header('Content-Type: application/json');
-    $new_status = $_POST['status'] ?? '';
-    $response = ['success' => false, 'message' => 'Trạng thái không hợp lệ.'];
-
-    if (in_array($new_status, ['pending', 'processing', 'completed', 'cancelled'])) {
-        $stmt = $conn->prepare("UPDATE orders SET status = ? WHERE order_id = ?");
-        $stmt->bind_param("si", $new_status, $order_id);
-        if ($stmt->execute()) {
-            // Fetch order details for notification and points
-            $order_info_stmt = $conn->prepare("SELECT user_id, total FROM orders WHERE order_id = ?");
-            $order_info_stmt->bind_param("i", $order_id);
-            $order_info_stmt->execute();
-            $order_info = $order_info_stmt->get_result()->fetch_assoc();
-            $customer_id = $order_info['user_id'];
-
-            // Status translation for notification
-            $status_map = [
-                'pending' => 'đang chờ xử lý',
-                'processing' => 'đang được xử lý',
-                'completed' => 'đã được giao thành công',
-                'cancelled' => 'đã bị hủy'
-            ];
-            $status_text = $status_map[$new_status] ?? 'đã được cập nhật';
-
-            // Create Order Status Notification
-            create_notification(
-                $conn,
-                $customer_id,
-                'order_status',
-                "Cập nhật đơn hàng #{$order_id}",
-                "Đơn hàng của bạn {$status_text}.",
-                $order_id,
-                '/customer/orders.php'
-            );
-
-            // If order is completed, calculate and add loyalty points
-            if ($new_status === 'completed') {
-                $points_to_add = floor($order_info['total'] / 1000);
-                if ($points_to_add > 0) {
-                    // Check if user exists in loyalty_points table
-                    $check_points_stmt = $conn->prepare("SELECT point_id FROM loyalty_points WHERE user_id = ?");
-                    $check_points_stmt->bind_param("i", $customer_id);
-                    $check_points_stmt->execute();
-                    $has_points_record = $check_points_stmt->get_result()->num_rows > 0;
-                    $check_points_stmt->close();
-
-                    if ($has_points_record) {
-                        $update_points_stmt = $conn->prepare("UPDATE loyalty_points SET points = points + ? WHERE user_id = ?");
-                        $update_points_stmt->bind_param("ii", $points_to_add, $customer_id);
-                        $update_points_stmt->execute();
-                        $update_points_stmt->close();
-                    } else {
-                        $insert_points_stmt = $conn->prepare("INSERT INTO loyalty_points (user_id, points) VALUES (?, ?)");
-                        $insert_points_stmt->bind_param("ii", $customer_id, $points_to_add);
-                        $insert_points_stmt->execute();
-                        $insert_points_stmt->close();
-                    }
-
-                    // Create Loyalty Points Notification
-                    create_notification(
-                        $conn,
-                        $customer_id,
-                        'loyalty_point',
-                        "Bạn đã nhận được điểm thưởng!",
-                        "Bạn đã được cộng {$points_to_add} điểm từ đơn hàng #{$order_id}.",
-                        $order_id,
-                        '/customer/account.php?page=points' // Assuming a points page exists
-                    );
-                }
-            }
-
-            $response = ['success' => true, 'message' => 'Cập nhật trạng thái thành công!', 'redirect' => 'orders/detail.php?id=' . $order_id];
-        } else {
-            $response['message'] = 'Có lỗi xảy ra khi cập nhật.';
-        }
-        $stmt->close();
-    }
-    echo json_encode($response);
-    exit;
-} else {
-    $message = ''; // Để xử lý cho trường hợp không phải AJAX (nếu cần)
-}
-
 // Fetch order details
 $stmt = $conn->prepare("SELECT o.order_id, o.order_date, o.status, o.total, o.voucher_code, o.discount_amount, u.full_name, u.email, u.phone FROM orders o JOIN users u ON o.user_id = u.user_id WHERE o.order_id = ?");
 $stmt->bind_param("i", $order_id);
@@ -149,18 +64,17 @@ function get_status_label($status) {
     </div>
 
     <!-- Update Status Form -->
-    <form method="post" action="orders/detail.php?id=<?php echo $order_id; ?>" class="bg-gray-50 p-4 rounded-lg">
+    <div class="bg-gray-50 p-4 rounded-lg">
       <label class="block text-sm font-semibold text-gray-700 mb-2">Cập nhật trạng thái đơn hàng</p>
       <div class="flex items-center gap-4">
-        <select name="status" class="border rounded px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-400">
+        <select name="status" data-order-id="<?php echo $order_id; ?>" class="order-status-select border rounded px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-400">
           <option value="pending" <?php echo $order['status'] === 'pending' ? 'selected' : ''; ?>>Chờ xử lý</option>
           <option value="processing" <?php echo $order['status'] === 'processing' ? 'selected' : ''; ?>>Đang xử lý</option>
           <option value="completed" <?php echo $order['status'] === 'completed' ? 'selected' : ''; ?>>Đã giao</option>
           <option value="cancelled" <?php echo $order['status'] === 'cancelled' ? 'selected' : ''; ?>>Đã hủy</option>
         </select>
-        <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white px-5 py-2 rounded-lg font-bold shadow transition whitespace-nowrap">Cập nhật</button>
       </div>
-    </form>
+    </div>
 
     <!-- Order Items -->
     <div>
