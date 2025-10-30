@@ -225,3 +225,9 @@ ALTER TABLE `vouchers` CHANGE COLUMN `program_name` `title` VARCHAR(255) NULL;
 
 -- Cập nhật lại cột `expires_at` để có giá trị mặc định hợp lý hơn
 ALTER TABLE `vouchers` MODIFY COLUMN `expires_at` TIMESTAMP NULL DEFAULT NULL;
+
+-- Bổ sung các cột còn thiếu cho bảng orders để lưu đầy đủ thông tin thanh toán
+ALTER TABLE `orders` ADD COLUMN `delivery_method` VARCHAR(50) DEFAULT 'pickup' AFTER `discount_amount`;
+ALTER TABLE `orders` ADD COLUMN `address` VARCHAR(255) NULL AFTER `delivery_method`;
+ALTER TABLE `orders` ADD COLUMN `notes` TEXT NULL AFTER `address`;
+ALTER TABLE `orders` ADD COLUMN `payment_method` VARCHAR(50) DEFAULT 'cash' AFTER `notes`;

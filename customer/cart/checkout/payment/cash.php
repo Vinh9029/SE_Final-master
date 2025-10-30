@@ -38,9 +38,6 @@ $customer_stmt->bind_param("i", $_SESSION['user_id']);
 $customer_stmt->execute();
 $customer_info = $customer_stmt->get_result()->fetch_assoc();
 
-// Lấy ghi chú từ đơn hàng (nếu có)
-// Giả sử bạn có một cột `notes` trong bảng `orders`
-$notes = $order_info['notes'] ?? '';
 
 ?>
 
@@ -136,11 +133,11 @@ $notes = $order_info['notes'] ?? '';
                                         Địa chỉ giao hàng
                                     </h3>
                                     <div class="bg-yellow-50 rounded-xl p-4 text-gray-700">
-                                        <p class="font-semibold text-brown"><?php echo htmlspecialchars($order_info['address'] ?? 'Nhận tại quầy'); ?></p>
-                                        <?php if (!empty($notes)): ?>
+                                        <p class="font-semibold text-brown"><?php echo !empty($order_info['address']) ? htmlspecialchars($order_info['address']) : 'Nhận tại quầy'; ?></p>
+                                        <?php if (!empty($order_info['notes'])): ?>
                                             <div class="mt-3 pt-3 border-t border-yellow-200">
                                                 <p class="text-sm text-gray-600">Ghi chú:</p>
-                                                <p class="text-sm italic">"<?php echo htmlspecialchars($notes); ?>"</p>
+                                                <p class="text-sm italic">"<?php echo htmlspecialchars($order_info['notes']); ?>"</p>
                                             </div>
                                         <?php endif; ?>
                                     </div>
@@ -242,7 +239,7 @@ $notes = $order_info['notes'] ?? '';
 
                             <!-- Actions -->
                             <div class="mt-6 space-y-3">
-                                <a href="../../orders.php" class="w-full cta-button text-white py-3 rounded-full font-bold text-center block shadow-lg hover:shadow-xl transition-all">
+                                <a href="../../../account.php?page=orders" class="w-full cta-button text-white py-3 rounded-full font-bold text-center block shadow-lg hover:shadow-xl transition-all">
                                     <i class="fas fa-list mr-2"></i>
                                     Xem đơn hàng
                                 </a>
@@ -263,10 +260,10 @@ $notes = $order_info['notes'] ?? '';
 
     <script>
         // Auto refresh order status every 30 seconds
-        let checkCount = 0;
-        const maxChecks = 10; // Stop after 5 minutes
+        // let checkCount = 0;
+        // const maxChecks = 10; // Stop after 5 minutes
 
-        function checkOrderStatus() {
+        /* function checkOrderStatus() {
             if (checkCount >= maxChecks) return;
 
             fetch(`check-status.php?order_id=<?php echo $order_id; ?>`)
@@ -293,11 +290,11 @@ $notes = $order_info['notes'] ?? '';
             checkCount++;
         }
 
-        // Check status every 30 seconds
-        setInterval(checkOrderStatus, 30000);
+        // Check status every 30 seconds - Tạm thời vô hiệu hóa để tránh lỗi 404 nếu file không tồn tại
+        // setInterval(checkOrderStatus, 30000);
 
         // Initial check after 10 seconds
-        setTimeout(checkOrderStatus, 10000);
+        // setTimeout(checkOrderStatus, 10000); */
     </script>
 </body>
 </html>

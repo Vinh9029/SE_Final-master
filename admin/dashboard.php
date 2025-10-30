@@ -256,7 +256,7 @@ $monthlyRevenue = number_format($monthlyRevenue, 0, ',', '.') . 'đ';
                   'Hành động này không thể hoàn tác!',
                   'Vâng, xóa nó!',
                   () => {
-                      fetch(adminBaseUrl + url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                      fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                           .then(res => res.json())
                           .then(data => {
                               if (data.success) {

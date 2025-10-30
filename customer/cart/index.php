@@ -341,8 +341,8 @@ if (!isset($_SESSION['user_id'])) {
                     showLoading(false);
                     if (result.success) {
                         showMessage(result.message, 'success');
-                        if (onSuccess) onSuccess();
                         setTimeout(() => {
+                            if (onSuccess) onSuccess();
                             window.location.reload();
                         }, 700); // Tự động reload trang sau khi thao tác
                     } else {
@@ -391,11 +391,10 @@ if (!isset($_SESSION['user_id'])) {
                 });
             };
         });
-        document.querySelector('.bg-gray-200 .fa-trash').parentElement.onclick = function() {
+        document.querySelector('.clear-cart-btn').onclick = function() {
             showConfirm('Bạn có chắc muốn xóa tất cả sản phẩm khỏi giỏ hàng?', () => {
                 ajaxCartAction('clear.php', {}, () => {
                     document.getElementById('cart-items').innerHTML = '';
-                    refreshCartUI();
                 });
             });
         };

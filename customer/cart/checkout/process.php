@@ -19,7 +19,7 @@ $delivery_method = $_POST['delivery_method'] ?? 'pickup';
 $address = $_POST['address'] ?? '';
 $city = $_POST['city'] ?? '';
 $district = $_POST['district'] ?? '';
-$notes = $_POST['notes'] ?? '';
+$notes = trim($_POST['notes'] ?? '');
 $payment_method = $_POST['payment_method'] ?? 'cash';
 // Lấy giỏ hàng
 $sql = 'SELECT ci.*, p.price, ps.extra_price FROM cart_items ci JOIN products p ON ci.product_id = p.product_id LEFT JOIN product_sizes ps ON ci.size_id = ps.size_id WHERE ci.user_id = ?';
@@ -30,6 +30,7 @@ $res = $stmt->get_result();
 $cart_items = [];
 $total = 0;
 while ($item = $res->fetch_assoc()) {
+    $item['size_id'] = $item['size_id'] ?? null; // Đảm bảo size_id luôn tồn tại
     $item_price = $item['price'] + ($item['extra_price'] ?? 0);
     $cart_items[] = $item;
     $total += $item_price * $item['quantity'];
@@ -56,25 +57,29 @@ if ($voucher_code && $total >= $voucher_min_order) {
 
 $final_total = $total - $discount_amount;
 
-// Cập nhật thông tin cá nhân nếu có thay đổi
-$stmt = $conn->prepare('SELECT full_name, phone, address FROM users WHERE user_id = ?');
-$stmt->bind_param('i', $user_id);
-$stmt->execute();
-$res = $stmt->get_result();
-$user = $res->fetch_assoc();
-if ($user) {
-    if ($user['full_name'] !== $full_name || $user['phone'] !== $phone || $user['address'] !== $address) {
-        $stmt2 = $conn->prepare('UPDATE users SET full_name = ?, phone = ?, address = ? WHERE user_id = ?');
-        $stmt2->bind_param('sssi', $full_name, $phone, $address, $user_id);
-        $stmt2->execute();
-        $stmt2->close();
-    }
+$conn->begin_transaction();
+try {
+// Cập nhật thông tin cá nhân
+$stmt_update_user = $conn->prepare('UPDATE users SET full_name = ?, phone = ?, email = ? WHERE user_id = ?');
+$stmt_update_user->bind_param('sssi', $full_name, $phone, $email, $user_id);
+$stmt_update_user->execute();
+$stmt_update_user->close();
+
+// Định dạng địa chỉ đầy đủ
+$full_address = '';
+if ($delivery_method === 'delivery') {
+    $full_address = implode(', ', array_filter([$address, $district, $city]));
 }
 
 // Tạo đơn hàng
-$sql = 'INSERT INTO orders (user_id, order_date, status, total, voucher_code, discount_amount) VALUES (?, NOW(), "pending", ?, ?, ?)';
+$sql = 'INSERT INTO orders (user_id, order_date, status, total, voucher_code, discount_amount, delivery_method, address, notes, payment_method) VALUES (?, NOW(), "pending", ?, ?, ?, ?, ?, ?, ?)';
 $stmt = $conn->prepare($sql);
-$stmt->bind_param('idssd', $user_id, $final_total, $voucher_code, $discount_amount);
+if (!$stmt) {
+    // Ghi log lỗi và trả về thông báo
+    throw new Exception("Prepare failed for order creation: (" . $conn->errno . ") " . $conn->error);
+}
+
+$stmt->bind_param('idsdssss', $user_id, $final_total, $voucher_code, $discount_amount, $delivery_method, $full_address, $notes, $payment_method);
 $stmt->execute();
 $order_id = $conn->insert_id;
 
@@ -93,17 +98,39 @@ if ($order_id) {
 
 // Lưu chi tiết đơn hàng
 foreach ($cart_items as $item) {
-    $sql = 'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)';
+    $sql = 'INSERT INTO order_items (order_id, product_id, size_id, quantity, price) VALUES (?, ?, ?, ?, ?)';
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('iiid', $order_id, $item['product_id'], $item['quantity'], $item['price']);
+    $stmt->bind_param('iiiid', $order_id, $item['product_id'], $item['size_id'], $item['quantity'], $item['price']);
     $stmt->execute();
 }
+
+// Cập nhật trạng thái voucher nếu đã sử dụng
+if ($voucher_code && $discount_amount > 0) {
+    $stmt_update_voucher = $conn->prepare("UPDATE vouchers SET status = 'used' WHERE code = ? AND (user_id = ? OR user_id IS NULL)");
+    if (!$stmt_update_voucher) {
+        throw new Exception("Prepare failed for voucher update: (" . $conn->errno . ") " . $conn->error);
+    }
+    $stmt_update_voucher->bind_param('si', $voucher_code, $user_id);
+    $stmt_update_voucher->execute();
+    $stmt_update_voucher->close();
+}
+
 // Xóa giỏ hàng
 $sql = 'DELETE FROM cart_items WHERE user_id = ?';
 $stmt = $conn->prepare($sql);
 $stmt->bind_param('i', $user_id);
 $stmt->execute();
-// Trả về kết quả
+
+    // Hoàn tất giao dịch
+    $conn->commit();
+
+} catch (Exception $e) {
+    $conn->rollback();
+    error_log("Checkout Error: " . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.']);
+    exit;
+}
+
 if ($payment_method === 'vnpay') {
     // Chuyển hướng sang VNPay
     $redirect_url = 'payment/vnpay.php?order_id=' . $order_id;

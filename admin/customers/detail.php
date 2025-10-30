@@ -107,13 +107,11 @@ function getStatusClass($status) {
             <div class="mt-2">
                 <span class="<?php echo htmlspecialchars($theme_class); ?> px-3 py-1 text-sm rounded-full font-bold"><?php echo htmlspecialchars($rank_name); ?></span>
             </div>
-            <?php if ($customer['deactivated_account'] == 1): ?>
-                <div class="mt-2">
-                    <span class="bg-red-100 text-red-800 px-3 py-1 text-sm rounded-full font-bold flex items-center gap-2">
-                        <i class="fa fa-exclamation-triangle"></i> Tài khoản đã bị vô hiệu hóa
-                    </span>
-                </div>
-            <?php endif; ?>
+            <div id="deactivated-status-badge" class="mt-2 <?php echo ($customer['deactivated_account'] == 0) ? 'hidden' : ''; ?>">
+                <span class="bg-red-100 text-red-800 px-3 py-1 text-sm rounded-full font-bold flex items-center gap-2">
+                    <i class="fa fa-exclamation-triangle"></i> Tài khoản đã bị vô hiệu hóa
+                </span>
+            </div>
         </div>
     </div>
 
@@ -155,15 +153,12 @@ function getStatusClass($status) {
 
             <h3 class="text-xl font-bold text-gray-800 mt-6 mb-4 border-b pb-2">Hành động</h3>
             <div class="space-y-3">
-                <?php if ($customer['deactivated_account'] == 0): ?>
-                    <button id="deactivate-btn" class="w-full inline-flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold shadow-sm transition">
-                        <i class="fa fa-user-slash"></i> Vô hiệu hóa tài khoản
-                    </button>
-                <?php else: ?>
-                    <button id="reactivate-btn" class="w-full inline-flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-bold shadow-sm transition">
-                        <i class="fa fa-user-check"></i> Kích hoạt lại tài khoản
-                    </button>
-                <?php endif; ?>
+                <button id="deactivate-btn" class="w-full inline-flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold shadow-sm transition <?php echo ($customer['deactivated_account'] == 1) ? 'hidden' : ''; ?>">
+                    <i class="fa fa-user-slash"></i> Vô hiệu hóa tài khoản
+                </button>
+                <button id="reactivate-btn" class="w-full inline-flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-bold shadow-sm transition <?php echo ($customer['deactivated_account'] == 0) ? 'hidden' : ''; ?>">
+                    <i class="fa fa-user-check"></i> Kích hoạt lại tài khoản
+                </button>
             </div>
         </div>
         <!-- Right: Order History -->
@@ -195,6 +190,7 @@ function getStatusClass($status) {
     const customerId = <?php echo json_encode($customer_id); ?>;
     const deactivateBtn = document.getElementById('deactivate-btn');
     const reactivateBtn = document.getElementById('reactivate-btn');
+    const statusBadgeContainer = document.getElementById('deactivated-status-badge');
 
     function handleAccountStatusChange(action) {
         const isDeactivating = action === 'deactivate';
@@ -218,11 +214,15 @@ function getStatusClass($status) {
             .then(data => {
                 if (data.success) {
                     showToast(data.message, 'success');
-                    // Tải lại nội dung của tab chi tiết để cập nhật trạng thái
-                    if (typeof loadPage === 'function') { // Check if loadPage function exists in parent
-                        loadPage('customers/detail.php?id=' + customerId, true);
+                    // Cập nhật UI trực tiếp thay vì tải lại trang
+                    if (isDeactivating) {
+                        deactivateBtn.classList.add('hidden');
+                        reactivateBtn.classList.remove('hidden');
+                        statusBadgeContainer.classList.remove('hidden');
                     } else {
-                        window.location.reload(); // Fallback to a full page reload
+                        deactivateBtn.classList.remove('hidden');
+                        reactivateBtn.classList.add('hidden');
+                        statusBadgeContainer.classList.add('hidden');
                     }
                 } else {
                     showToast('Lỗi: ' + data.message, 'error');
