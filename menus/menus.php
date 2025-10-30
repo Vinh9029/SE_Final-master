@@ -73,7 +73,7 @@ if (isset($_SESSION['user_id'])) {
         .footer-bg { background: #3d2c1a; }
     </style>
 </head>
-<body class="bg-pink-50 font-sans">
+<body class="bg-beige font-sans" style="background-color: #f3e8d6ff;">
     <!-- Header -->
     <?php include_once __DIR__ . '/../includes/header.php'; ?>
     <!-- Hero Banner Slider -->

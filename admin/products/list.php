@@ -58,16 +58,17 @@ $result = $conn->query($sql);
           <?= htmlspecialchars($message) ?>
         </div>
       <?php endif; ?>
-      <div class="mb-4 flex items-center gap-2">
+      <form id="filter-form" method="get" action="products/list.php" class="mb-4 flex items-center gap-2">
         <select name="cat" class="border rounded px-2 py-1">
           <option value="">Tất cả danh mục</option>
           <?php foreach($catList as $catName): ?>
             <option value="<?= htmlspecialchars($catName) ?>" <?= $cat == $catName ? 'selected' : '' ?>><?= htmlspecialchars($catName) ?></option>
           <?php endforeach; ?>
         </select>
-        <input type="text" id="searchInput" placeholder="Tìm kiếm sản phẩm..." value="<?= htmlspecialchars($search) ?>" class="border rounded px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-200">
-        <button id="clearSearch" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded font-semibold"><i class="fa fa-times"></i></button>
-      </div>
+        <input type="text" name="search" placeholder="Tìm kiếm sản phẩm..." value="<?= htmlspecialchars($search) ?>" class="border rounded px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-200">
+        <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded font-semibold">Lọc</button>
+        <a href="#" data-page="products/list.php" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded font-semibold" title="Xóa bộ lọc"><i class="fa fa-times"></i></a>
+      </form>
     <table id="productTable" class="min-w-full table-auto border-collapse">
       <thead>
         <tr class="bg-orange-100 text-orange-700">
@@ -104,51 +105,3 @@ $result = $conn->query($sql);
     </div>
   </div>
 </div>
-<script>
-  // --- Refactored and Unified AJAX/Search/Filter Logic ---
-
-  // Check if the loadPage function exists in the parent window
-  const canAjax = window.parent && typeof window.parent.loadPage === 'function';
-
-  // Function to build URL with current filters
-  function buildUrl(page, baseFile = 'products/list.php') {
-    const term = document.getElementById('searchInput').value.trim();
-    const category = document.querySelector('select[name="cat"]').value;
-    const params = new URLSearchParams({
-      page: page,
-      search: term,
-      cat: category
-    });
-    return `${baseFile}?${params.toString()}`;
-  }
-
-  // Attach event listeners for search and filter
-  let searchTimeout;
-  document.getElementById('searchInput').addEventListener('input', () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => canAjax && window.parent.loadPage(buildUrl(1)), 500);
-  });
-
-  document.querySelector('select[name="cat"]').addEventListener('change', () => {
-    canAjax && window.parent.loadPage(buildUrl(1));
-  });
-
-  document.getElementById('clearSearch').addEventListener('click', () => {
-    document.getElementById('searchInput').value = '';
-    document.querySelector('select[name="cat"]').value = '';
-    canAjax && window.parent.loadPage('products/list.php?page=1');
-  });
-
-  // Bind all data-page links (pagination, edit, delete, add)
-  document.querySelectorAll('a[data-page]').forEach(link => {
-    link.addEventListener('click', function(e) {
-      e.preventDefault();
-      const pageUrl = this.getAttribute('data-page');
-      if (canAjax) {
-        window.parent.loadPage(pageUrl);
-      } else {
-        window.location.href = pageUrl; // Fallback for direct access
-      }
-    });
-  });
-</script>

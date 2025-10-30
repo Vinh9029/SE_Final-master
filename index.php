@@ -406,13 +406,13 @@ ini_set('display_errors', 1);
         // Slider JS
         let currentSlide = 0;
         const slides = document.querySelectorAll('.slider-img');
-        const dots = document.querySelectorAll('.slider-dot');
+        const sliderDots = document.querySelectorAll('#slider .slider-dot');
 
-        function showSlide(idx) {
+        function showMainSlide(idx) {
             slides.forEach((img, i) => {
                 img.style.opacity = i === idx ? '1' : '0';
             });
-            dots.forEach((dot, i) => {
+            sliderDots.forEach((dot, i) => {
                 dot.className = 'slider-dot w-3 h-3 rounded-full ' + (i === idx ? 'bg-pink-500' : 'bg-gray-300');
             });
             currentSlide = idx;
@@ -420,18 +420,18 @@ ini_set('display_errors', 1);
 
         function nextSlide() {
             let idx = (currentSlide + 1) % slides.length;
-            showSlide(idx);
+            showMainSlide(idx);
         }
 
         function prevSlide() {
             let idx = (currentSlide - 1 + slides.length) % slides.length;
-            showSlide(idx);
+            showMainSlide(idx);
         }
-        document.querySelectorAll('.slider-dot').forEach((dot, i) => {
-            dot.onclick = () => showSlide(i);
+        sliderDots.forEach((dot, i) => {
+            dot.onclick = () => showMainSlide(i);
         });
         setInterval(nextSlide, 5000);
-        showSlide(0);
+        showMainSlide(0);
         window.addEventListener('message', function(event) {
             // Chỉ nhận message từ spinner.php
             if (event.data && event.data.type === 'spinner-result') {

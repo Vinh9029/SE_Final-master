@@ -196,16 +196,22 @@ include_once __DIR__ . '/../database/db_connection.php';
                 <h2 class="text-4xl font-bold text-4B2E05 mb-4">Trải Nghiệm Không Gian</h2>
                 <p class="text-lg text-222222">Bước vào thế giới của chúng tôi</p>
             </div>
-            <div class="slider">
-                <div class="slider-images">
-                    <img src="../Photos/interior.jpg" alt="Không gian quán">
-                    <img src="../Photos/login_background.jpg" alt="Góc ngồi">
-                    <img src="../Photos/stories.jpg" alt="Khách hàng">
+            <div class="slider relative rounded-xl overflow-hidden shadow-lg" id="experience-slider">
+                <div class="slider-images flex transition-transform duration-400 ease-in-out">
+                    <img src="../Photos/interior.jpg" alt="Không gian quán" class="w-full flex-shrink-0">
+                    <img src="../Photos/interior1.jpg" alt="Góc ngồi" class="w-full flex-shrink-0">
+                    <img src="../Photos/stories.jpg" alt="Khách hàng" class="w-full flex-shrink-0">
                 </div>
-            </div>
-            <div class="flex justify-center mt-4">
-                <button id="prevBtn" class="mx-2 px-4 py-2 bg-4B2E05 text-white rounded">Trước</button>
-                <button id="nextBtn" class="mx-2 px-4 py-2 bg-4B2E05 text-white rounded">Sau</button>
+                <!-- Navigation Buttons -->
+                <button id="prevBtn" class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white/50 hover:bg-white/80 text-4B2E05 w-10 h-10 rounded-full shadow-md transition flex items-center justify-center">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button id="nextBtn" class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white/50 hover:bg-white/80 text-4B2E05 w-10 h-10 rounded-full shadow-md transition flex items-center justify-center">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <!-- Dots -->
+                <div id="slider-dots" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+                </div>
             </div>
         </div>
     </section>
@@ -321,22 +327,48 @@ include_once __DIR__ . '/../database/db_connection.php';
         });
 
         // Slider
-        let currentSlide = 0;
-        const slides = document.querySelector('.slider-images');
-        const totalSlides = slides.children.length;
+        const sliderContainer = document.getElementById('experience-slider');
+        if (sliderContainer) {
+            let currentSlide = 0;
+            const slides = sliderContainer.querySelector('.slider-images');
+            const totalSlides = slides.children.length;
+            const dotsContainer = document.getElementById('slider-dots');
+            let autoSlideInterval;
 
-        document.getElementById('nextBtn').addEventListener('click', () => {
-            currentSlide = (currentSlide + 1) % totalSlides;
+            // Create dots
+            for (let i = 0; i < totalSlides; i++) {
+                const dot = document.createElement('button');
+                dot.classList.add('w-3', 'h-3', 'rounded-full', 'transition-colors');
+                dot.addEventListener('click', () => {
+                    currentSlide = i;
+                    updateSlide();
+                    resetAutoSlide();
+                });
+                dotsContainer.appendChild(dot);
+            }
+            const dots = dotsContainer.querySelectorAll('button');
+
+            function updateSlide() {
+                slides.style.transform = `translateX(-${currentSlide * 100}%)`;
+                dots.forEach((dot, index) => {
+                    dot.classList.toggle('bg-white', index === currentSlide);
+                    dot.classList.toggle('bg-white/50', index !== currentSlide);
+                });
+            }
+
+            function resetAutoSlide() {
+                clearInterval(autoSlideInterval);
+                autoSlideInterval = setInterval(() => {
+                    currentSlide = (currentSlide + 1) % totalSlides;
+                    updateSlide();
+                }, 5000);
+            }
+
+            sliderContainer.querySelector('#nextBtn').addEventListener('click', () => { currentSlide = (currentSlide + 1) % totalSlides; updateSlide(); resetAutoSlide(); });
+            sliderContainer.querySelector('#prevBtn').addEventListener('click', () => { currentSlide = (currentSlide - 1 + totalSlides) % totalSlides; updateSlide(); resetAutoSlide(); });
+            
             updateSlide();
-        });
-
-        document.getElementById('prevBtn').addEventListener('click', () => {
-            currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
-            updateSlide();
-        });
-
-        function updateSlide() {
-            slides.style.transform = `translateX(-${currentSlide * 100}%)`;
+            resetAutoSlide();
         }
 
         // Auto open popup after 5 seconds

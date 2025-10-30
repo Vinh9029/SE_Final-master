@@ -4,15 +4,39 @@ include_once __DIR__ . '/../../database/db_connection.php';
 
 // Lấy các bài blog đã được duyệt
 $blogs = [];
-$sql = "SELECT b.*, u.full_name FROM blogs b JOIN users u ON b.user_id = u.user_id WHERE b.status = 'approved' ORDER BY b.created_at DESC";
-$result = $conn->query($sql);
+$search_query = $_GET['search_query'] ?? '';
+$search_param = '%' . $search_query . '%';
+
+$sql = "SELECT b.*, u.full_name FROM blogs b JOIN users u ON b.user_id = u.user_id WHERE b.status = 'approved'";
+$params = [];
+$types = '';
+
+if (!empty($search_query)) {
+    $sql .= " AND (b.title LIKE ? OR u.full_name LIKE ?)";
+    $params[] = $search_param;
+    $params[] = $search_param;
+    $types .= 'ss';
+}
+
+$sql .= " ORDER BY b.created_at DESC";
+
+$stmt = $conn->prepare($sql);
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
+$stmt->execute();
+$result = $stmt->get_result();
+
 if ($result) {
     $blogs = $result->fetch_all(MYSQLI_ASSOC);
 }
 
 // Tách bài viết đầu tiên làm bài nổi bật
-$featured_blog = array_shift($blogs);
-
+// Tách bài viết đầu tiên làm bài nổi bật (nếu có)
+$featured_blog = null;
+if (!empty($blogs)) {
+    $featured_blog = array_shift($blogs);
+}
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -54,6 +78,23 @@ $featured_blog = array_shift($blogs);
         <div class="text-center mb-12">
             <h1 class="text-5xl font-bold mb-2">Những Câu Chuyện Quanh Tách Cà Phê</h1>
             <p class="text-lg text-gray-600">Nơi hương vị và ký ức hòa quyện.</p>
+            <!-- Search Form -->
+            <form action="" method="GET" class="mt-8 max-w-xl mx-auto flex items-center gap-2">
+                <input type="text" name="search_query" placeholder="Tìm kiếm bài viết hoặc tác giả..." 
+                       value="<?php echo htmlspecialchars($search_query); ?>"
+                       class="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-800">
+                <button type="submit" class="bg-yellow-800 text-white font-bold py-3 px-6 rounded-lg hover:bg-yellow-900 transition-colors duration-300">
+                    <i class="fas fa-search mr-2"></i> Tìm kiếm
+                </button>
+                <?php if (!empty($search_query)): ?>
+                    <a href="<?php echo $base_url; ?>/pages/blogs/index.php" class="bg-gray-300 text-gray-700 font-bold py-3 px-4 rounded-lg hover:bg-gray-400 transition-colors duration-300" title="Xóa tìm kiếm">
+                        <i class="fas fa-times"></i>
+                    </a>
+                <?php endif; ?>
+            </form>
+            <?php if (!empty($search_query)): ?>
+                <p class="text-sm text-gray-500 mt-4">Kết quả tìm kiếm cho: "<strong><?php echo htmlspecialchars($search_query); ?></strong>"</p>
+            <?php endif; ?>
         </div>
 
         <!-- Nút viết bài mới cho người dùng đã đăng nhập -->
@@ -75,8 +116,8 @@ $featured_blog = array_shift($blogs);
 
         <!-- Danh sách bài blog -->
         <div>
-            <?php if (!$featured_blog) : ?>
-                <p class="text-center text-gray-500 text-xl">Chưa có bài viết nào được đăng.</p>
+            <?php if (!$featured_blog && empty($blogs)) : ?>
+                <p class="text-center text-gray-500 text-xl">Không tìm thấy bài viết nào<?php echo !empty($search_query) ? ' phù hợp với từ khóa "'.htmlspecialchars($search_query).'"' : ''; ?>.</p>
             <?php else : ?>
                 <!-- Featured Blog Post -->
                 <div class="mb-16 blog-card bg-white rounded-xl shadow-lg overflow-hidden">
