@@ -54,3 +54,6 @@
         &copy; 2025 Old Favour Coffee. All rights reserved.
     </div>
 </footer>
+<?php include_once __DIR__ . '/chat-zalo.php'; ?>
+<?php include_once __DIR__ . '/scrollButton.php'; ?>
+<?php include_once __DIR__ . '/agent-chat.php'; ?>

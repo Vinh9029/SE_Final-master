@@ -39,6 +39,11 @@ if (isset($_SESSION['user_id'])) {
     }
     $fav_check_stmt->close();
 }
+
+$relatedStmt = $conn->prepare("SELECT * FROM products WHERE category_id = ? AND product_id != ? ORDER BY product_id DESC LIMIT 3");
+$relatedStmt->bind_param("ii", $product['category_id'], $product['product_id']);
+$relatedStmt->execute();
+$relatedProducts = $relatedStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -81,16 +86,16 @@ if (isset($_SESSION['user_id'])) {
             <span class="mx-2 text-pink-300 font-bold">/</span>
             <span class="text-pink-600"><?php echo $product['name']; ?></span>
         </nav>
-        <div class="relative bg-white rounded-2xl shadow-xl p-8 flex flex-col md:flex-row gap-8 items-center">
+        <div class="relative bg-white rounded-2xl shadow-xl p-8 flex flex-col md:flex-row gap-8 items-start md:items-stretch">
             <?php if (isset($_SESSION['user_id'])): ?>
                 <button id="favourite-btn" class="absolute top-4 right-4 <?php echo $is_favourited ? 'bg-pink-600 text-white' : 'bg-gray-200 text-gray-700'; ?> px-4 py-2 rounded-full font-bold text-lg shadow transition duration-200" data-product-id="<?php echo $product['product_id']; ?>">
                     <i class="fa <?php echo $is_favourited ? 'fa-heart-circle-check' : 'fa-heart'; ?>"></i>
                 </button>
             <?php endif; ?>
-            <div class="flex-shrink-0">
+            <div class="flex-shrink-0 mx-auto md:mx-0">
                 <img src="<?php echo $base_url . '/' . ($product['image'] ?: 'Photos/placeholder.png'); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="w-64 h-64 object-cover rounded-xl shadow bg-gray-100 border-2 border-pink-100" />
             </div>
-            <div class="flex-1 flex flex-col justify-center">
+            <div class="flex-1 flex flex-col w-full">
                 <h1 class="font-extrabold text-pink-600 text-3xl mb-2"><?php echo $product['name']; ?></h1>
                 <div class="mb-6">
                     <h4 class="font-bold text-lg mb-2 text-pink-600">Chọn Size</h4>
@@ -151,6 +156,24 @@ if (isset($_SESSION['user_id'])) {
                 </div>
             </div>
         </div>
+
+        <?php if (!empty($relatedProducts)): ?>
+        <div class="mt-12">
+            <h2 class="text-2xl font-bold text-pink-600 mb-6">Sản phẩm cùng danh mục</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 items-stretch">
+                <?php foreach ($relatedProducts as $item): ?>
+                <div class="relative bg-white rounded-2xl shadow-xl p-6 flex flex-col items-center h-full hover:shadow-pink-300 transition duration-200">
+                    <a href="product.php?slug=<?php echo generateSlug($item['name']); ?>" class="block mb-4">
+                        <img src="<?php echo $base_url . '/' . ($item['image'] ?: 'Photos/placeholder.png'); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="w-36 h-36 object-cover rounded-xl shadow bg-gray-100 border-2 border-pink-100" />
+                    </a>
+                    <div class="font-extrabold text-pink-600 text-xl text-center mb-2 min-h-[3.5rem] line-clamp-2 leading-tight"><?php echo htmlspecialchars($item['name']); ?></div>
+                    <div class="text-orange-600 font-bold text-lg text-center mt-auto mb-3"><?php echo number_format($item['price'], 0, ',', '.'); ?> đ</div>
+                    <a href="product.php?slug=<?php echo generateSlug($item['name']); ?>" class="btn-orange hover:bg-orange-600 text-white px-6 py-2 rounded-xl font-bold text-base shadow transition duration-200 w-full text-center">Xem chi tiết</a>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 
     <?php include_once __DIR__ . '/../includes/footer.php'; ?>

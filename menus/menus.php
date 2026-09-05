@@ -147,23 +147,23 @@ if (isset($_SESSION['user_id'])) {
             }
         </script>
         <!-- Grid sản phẩm -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8 items-stretch">
             <?php foreach ($pagedItems as $item): ?>
-                <div class="relative bg-white rounded-2xl shadow-xl p-6 flex flex-col items-center hover:scale-105 hover:shadow-pink-300 transition duration-200 group">
+                <div class="relative bg-white rounded-2xl shadow-xl p-6 flex flex-col items-center h-full hover:shadow-pink-300 transition duration-200 group">
                     <?php if (isset($_SESSION['user_id'])):
                         $is_favourited = in_array($item['product_id'], $favourite_ids);
                     ?>
-                        <button class="favourite-btn absolute top-3 right-3 text-xl <?php echo $is_favourited ? 'text-pink-500' : 'text-gray-300'; ?> hover:text-pink-400 transition" data-product-id="<?php echo $item['product_id']; ?>">
+                        <button class="favourite-btn absolute top-3 right-3 text-xl <?php echo $is_favourited ? 'text-pink-500' : 'text-gray-300'; ?> hover:text-pink-400 transition z-10" data-product-id="<?php echo $item['product_id']; ?>">
                             <i class="fa <?php echo $is_favourited ? 'fa-solid' : 'fa-regular'; ?> fa-heart"></i>
                         </button>
                     <?php endif; ?>
 
-                    <a href="product.php?slug=<?php echo generateSlug($item['name']); ?>">
-                        <img src="<?php echo $base_url . '/' . ($item['image'] ?: 'Photos/placeholder.png'); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="w-32 h-32 object-cover rounded-xl mb-4 shadow bg-gray-100 border-2 border-pink-100" />
+                    <a href="product.php?slug=<?php echo generateSlug($item['name']); ?>" class="block mb-4">
+                        <img src="<?php echo $base_url . '/' . ($item['image'] ?: 'Photos/placeholder.png'); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="w-36 h-36 object-cover rounded-xl shadow bg-gray-100 border-2 border-pink-100" />
                     </a>
-                    <div class="font-extrabold text-pink-600 text-xl text-center mb-1"><?php echo $item['name']; ?></div>
-                    <div class="text-orange-600 font-bold text-lg mb-2 text-center"><?php echo number_format($item['price'], 0, ',', '.'); ?> đ</div>
-                    <a href="product.php?slug=<?php echo generateSlug($item['name']); ?>" class="btn-orange hover:bg-orange-600 text-white px-6 py-2 rounded-xl font-bold text-base mt-2 shadow transition duration-200">Xem chi tiết</a>
+                    <div class="font-extrabold text-pink-600 text-xl text-center mb-2 min-h-[3.5rem] line-clamp-2 leading-tight"><?php echo htmlspecialchars($item['name']); ?></div>
+                    <div class="text-orange-600 font-bold text-lg text-center mt-auto mb-3"><?php echo number_format($item['price'], 0, ',', '.'); ?> đ</div>
+                    <a href="product.php?slug=<?php echo generateSlug($item['name']); ?>" class="btn-orange hover:bg-orange-600 text-white px-6 py-2 rounded-xl font-bold text-base shadow transition duration-200 w-full text-center">Xem chi tiết</a>
                 </div>
             <?php endforeach; ?>
         </div>

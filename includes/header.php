@@ -60,6 +60,7 @@ if (isset($_SESSION['user_id'])) {
                 <li><a href="<?php echo $base_url; ?>/pages/aboutUs.php" class="text-gray-700 hover:text-pink-600 font-medium transition">Về chúng tôi</a></li>
                 <li><a href="<?php echo $base_url; ?>/pages/contactUS.php" class="text-gray-700 hover:text-pink-600 font-medium transition">Liên hệ</a></li>
                 <li><a href="<?php echo $base_url; ?>/pages/blogs/index.php" class="text-gray-700 hover:text-pink-600 font-medium transition">Blogs</a></li>
+                <li><a href="<?php echo $base_url; ?>/pages/agent/index.php" class="text-gray-700 hover:text-pink-600 font-medium transition flex items-center gap-1"><i class="fa fa-comments text-pink-500"></i> Chatbot</a></li>
             </ul>
         </nav>
 

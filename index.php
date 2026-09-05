@@ -374,14 +374,8 @@ ini_set('display_errors', 1);
             showReviews(0);
             startAutoPlay();
         </script>
-        <?php include 'includes/chat-zalo.php'; ?>
     </main>
     <?php include 'includes/popup_signup.php'; ?>
-    <?php include 'includes/scrollButton.php'; ?>
-    <!-- Scroll to Top Button -->
-    <button id="scrollTopBtn" class="fixed bottom-5 right-5 bg-white text-brown-500 border border-brown-500 p-4 rounded-full shadow-lg opacity-0 transition-opacity duration-300 hover:bg-brown-500 hover:text-white">
-        <i class="fas fa-arrow-up"></i>
-    </button>
     <?php include 'includes/footer.php'; ?>
     <script>
         // Dropdown for menu
@@ -450,24 +444,6 @@ ini_set('display_errors', 1);
             }, 3000);
         });
 
-
-        // Scroll to top button
-        const scrollTopBtn = document.getElementById('scrollTopBtn');
-        window.addEventListener('scroll', () => {
-            if (window.pageYOffset > 100) {
-                scrollTopBtn.classList.remove('opacity-0');
-                scrollTopBtn.classList.add('opacity-100');
-            } else {
-                scrollTopBtn.classList.remove('opacity-100');
-                scrollTopBtn.classList.add('opacity-0');
-            }
-        });
-        scrollTopBtn.addEventListener('click', () => {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        });
 
         // Auto open popup after 5 seconds
         setTimeout(() => {

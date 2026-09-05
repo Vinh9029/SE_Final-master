@@ -89,6 +89,16 @@ SE_Final-master/
 - **Quản lý blog cá nhân**: Chỉnh sửa, xóa bài viết của mình
 - **Chi tiết blog**: Đọc full bài viết với bình luận
 
+#### TheOldFlavour Agent (`pages/agent/index.php`)
+- **Mục Chatbot** trên header, nằm kế bên Blogs
+- **Trang hội thoại**: giao diện chat full-page, gợi ý câu hỏi nhanh (menu, giao hàng, ưu đãi)
+- **Popup góc phải**: nút **TheOldFlavour Agent** trên mọi trang khách (ẩn khi đang ở trang Agent)
+- **Backend**: `includes/handlers/agent/reply.php` — trả lời theo từ khóa (FAQ), chạy local trên XAMPP, không cần API key
+- **Floating widgets**: Agent, Zalo (`includes/chat-zalo.php`) và nút scroll (`includes/scrollButton.php`) được gắn trong footer và căn lệch vị trí để không đè nhau
+  - Agent: góc phải dưới
+  - Scroll: bên trái nút Agent
+  - Zalo: phía trên nút Agent
+
 #### Bình Luận & Phản Ứng (`includes/handlers/comments/`)
 - **Bình luận**: Trên sản phẩm và blog
 - **Phản ứng**: Like, love, haha, wow, sad, angry
@@ -224,10 +234,13 @@ SE_Final-master/
 4. Cấu hình `config.php` với thông tin DB
 
 ### Quy Trình Deploy
-1. Upload files lên server
-2. Cấu hình database production
-3. Setup cron jobs cho notifications
-4. Cấu hình email SMTP
+1. Upload files lên **hosting PHP + MySQL** (Apache/Nginx), không dùng GitHub Pages (Pages chỉ phục vụ HTML/CSS/JS tĩnh)
+2. Import `database/schema.sql`, cấu hình `config.php` / kết nối DB production
+3. Chạy `composer install` trên server
+4. Cấu hình PHPMailer SMTP (OTP, voucher) bằng biến môi trường, không commit App Password
+5. Setup cron jobs cho notifications nếu cần
+
+Gợi ý free-tier phù hợp stack PHP/MySQL: Alwaysdata, InfinityFree, AwardSpace, Oracle Cloud Always Free (tự cài LAMP), hoặc Railway/Render (thường có hạn mức/sleep). GitHub Pages **không** chạy được PHP, MySQL hay PHPMailer.
 
 ## Kết Luận
 
@@ -242,7 +255,7 @@ Dự án **SE_Final-master** là một hệ thống thương mại điện tử 
 ### Hướng Phát Triển Tương Lai
 - Tích hợp thanh toán online thực tế
 - Mobile app companion
-- AI chatbot tư vấn
+- Nâng cấp Agent từ FAQ sang mô hình AI (API) nếu có key
 - Phân tích dữ liệu nâng cao
 - Tích hợp với hệ thống POS quán
 

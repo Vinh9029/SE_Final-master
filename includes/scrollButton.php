@@ -6,8 +6,8 @@
 <style>
 .scroll-to-top {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
+    bottom: 24px;
+    right: 96px;
     display: none; /* Hidden by default */
     width: 50px;
     height: 50px;

@@ -317,7 +317,9 @@ include_once __DIR__ . '/../database/db_connection.php';
     </footer>
 
     <?php include '../includes/popup_signup.php'; ?>
+    <?php include '../includes/chat-zalo.php'; ?>
     <?php include '../includes/scrollButton.php'; ?>
+    <?php include '../includes/agent-chat.php'; ?>
     <script>
         // Loading screen
         window.addEventListener('load', () => {
